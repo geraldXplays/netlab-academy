@@ -67,7 +67,7 @@ function ToastCard({ t }: { t: Toast }) {
     return (
       <div className="glass-strong glow-border flex items-center gap-4 rounded-2xl p-4 shadow-[var(--shadow)]">
         <motion.div
-          className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cyan to-purple text-bg"
+          className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-cyan to-purple text-on-accent"
           animate={{ y: [0, -4, 0] }}
           transition={{ repeat: 2, duration: 0.6 }}
         >

@@ -112,7 +112,7 @@ export function SimulatorTeaser() {
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(transparent_50%,rgb(0_0_0/0.06)_50%)] bg-[length:100%_4px] opacity-40" />
           </div>
 
-          <div data-alert className="glass-strong absolute -top-6 -right-2 flex items-center gap-3 rounded-xl border-danger/40 px-4 py-3 shadow-[0_10px_40px_-10px_rgb(244_63_94/0.5)] sm:-right-6">
+          <div data-alert className="glass-strong absolute -top-6 -right-2 flex items-center gap-3 rounded-xl border-danger/40 px-4 py-3 shadow-[0_10px_40px_-10px_rgb(var(--danger-rgb)/0.5)] sm:-right-6">
             <span className="relative grid h-9 w-9 place-items-center rounded-lg bg-danger/15 text-danger">
               <span className="absolute inset-0 animate-ping rounded-lg bg-danger/20" />
               <Siren size={18} />

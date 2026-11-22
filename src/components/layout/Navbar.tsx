@@ -12,6 +12,7 @@ import { cn } from '@/lib/cn'
 import { NAV_LINKS } from './navLinks'
 import { LangToggle } from './LangToggle'
 import { SettingsMenu } from './SettingsMenu'
+import { IdentityPickerButton } from './IdentityPicker'
 
 export function Navbar() {
   const { d } = useI18n()
@@ -37,7 +38,7 @@ export function Navbar() {
 
   return (
     <>
-      <a href="#main" className="sr-only z-[100] rounded-full bg-cyan px-4 py-2 text-bg focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
+      <a href="#main" className="sr-only z-[100] rounded-full bg-cyan px-4 py-2 text-on-accent focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
         {d.nav.skip}
       </a>
       <motion.header
@@ -87,7 +88,8 @@ export function Navbar() {
             <div className="hidden sm:block">
               <LangToggle />
             </div>
-            <div className="hidden sm:flex">
+            <div className="hidden items-center sm:flex">
+              <IdentityPickerButton />
               <SettingsMenu />
             </div>
             {isLanding ? (
@@ -172,6 +174,7 @@ function MobileMenu() {
             animate={{ opacity: 1, y: 0, transition: { delay: 0.6 } }}
           >
             <LangToggle size="md" />
+            <IdentityPickerButton />
             <SettingsMenu up />
           </motion.div>
         </motion.div>

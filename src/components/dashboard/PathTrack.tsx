@@ -44,7 +44,7 @@ export function PathTrack() {
               className={cn(
                 'relative z-10 grid h-12 w-12 place-items-center rounded-2xl border font-mono text-sm font-semibold transition-colors',
                 status === 'complete' && 'border-success/50 bg-success/15 text-success',
-                status === 'inProgress' && 'border-cyan bg-bg-2 text-cyan shadow-[0_0_20px_rgb(34_211_238/0.35)]',
+                status === 'inProgress' && 'border-cyan bg-bg-2 text-cyan shadow-[0_0_20px_rgb(var(--cyan-rgb)/0.35)]',
                 status === 'available' && 'border-line-strong bg-bg-2 text-text',
                 status === 'locked' && 'border-line bg-bg-2 text-dim',
               )}

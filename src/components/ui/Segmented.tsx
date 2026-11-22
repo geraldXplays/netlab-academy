@@ -26,13 +26,13 @@ export function Segmented<T extends string>({ value, options, onChange, label, s
             className={cn(
               'relative rounded-full font-mono font-medium tracking-wider transition-colors duration-300',
               size === 'sm' ? 'h-7 px-2.5 text-[0.7rem]' : 'h-9 px-4 text-xs',
-              active ? 'text-bg' : 'text-muted hover:text-text',
+              active ? 'text-on-accent' : 'text-muted hover:text-text',
             )}
           >
             {active && (
               <motion.span
                 layoutId={`seg-${id}`}
-                className="absolute inset-0 rounded-full bg-cyan shadow-[0_0_16px_rgb(34_211_238/0.5)]"
+                className="absolute inset-0 rounded-full bg-cyan shadow-[0_0_16px_rgb(var(--cyan-rgb)/0.5)]"
                 transition={{ type: 'spring', stiffness: 420, damping: 34 }}
               />
             )}

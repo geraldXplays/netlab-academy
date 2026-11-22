@@ -1,22 +1,19 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowRight, Play } from 'lucide-react'
 import { gsap, useGSAP } from '@/lib/gsap'
 import { Button } from '@/components/ui/Button'
 import { DecryptText } from '@/components/ui/DecryptText'
 import { useI18n } from '@/i18n'
 import { useUI } from '@/store/ui'
-import { useSettings } from '@/store/settings'
+import { HeroScene } from '@/components/fx/HeroScene'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
 import { useScrollTo } from '@/providers/SmoothScroll'
 import { cn } from '@/lib/cn'
-
-const NetworkGlobe = lazy(() => import('@/components/fx/NetworkGlobe'))
 
 export function Hero() {
   const { d } = useI18n()
   const root = useRef<HTMLElement>(null)
   const introDone = useUI((s) => s.introDone)
-  const theme = useSettings((s) => s.theme)
   const reduced = useReducedMotionPref()
   const scrollTo = useScrollTo()
   const [ready, setReady] = useState(false)
@@ -50,18 +47,58 @@ export function Hero() {
     { scope: root, dependencies: [reduced] },
   )
 
+  // Cursor: headline tilts in 3D, words drift at different depths, a spotlight follows.
+  useGSAP(
+    () => {
+      if (reduced || !window.matchMedia('(pointer: fine)').matches) return
+      const el = root.current!
+      const h1 = el.querySelector<HTMLElement>('[data-hero-tilt]')!
+      const spot = el.querySelector<HTMLElement>('[data-hero-spot]')!
+      gsap.set(h1, { transformPerspective: 900, transformOrigin: '30% 60%' })
+      const rx = gsap.quickTo(h1, 'rotationX', { duration: 0.9, ease: 'power3.out' })
+      const ry = gsap.quickTo(h1, 'rotationY', { duration: 0.9, ease: 'power3.out' })
+      const words = gsap.utils.toArray<HTMLElement>('[data-hero-word]', el).map((w, i) => ({
+        x: gsap.quickTo(w, 'x', { duration: 1.1, ease: 'power3.out' }),
+        depth: 4 + (i % 4) * 5,
+      }))
+      const onMove = (e: PointerEvent) => {
+        const r = el.getBoundingClientRect()
+        if (e.clientY > r.bottom) return
+        const nx = (e.clientX - r.left) / r.width - 0.5
+        const ny = (e.clientY - r.top) / r.height - 0.5
+        rx(-ny * 8)
+        ry(nx * 10)
+        words.forEach((w) => w.x(nx * w.depth))
+        el.style.setProperty('--hx', `${e.clientX - r.left}px`)
+        el.style.setProperty('--hy', `${e.clientY - r.top}px`)
+        spot.style.opacity = '1'
+      }
+      const onLeave = () => {
+        rx(0)
+        ry(0)
+        words.forEach((w) => w.x(0))
+        spot.style.opacity = '0'
+      }
+      el.addEventListener('pointermove', onMove)
+      el.addEventListener('pointerleave', onLeave)
+      return () => {
+        el.removeEventListener('pointermove', onMove)
+        el.removeEventListener('pointerleave', onLeave)
+      }
+    },
+    { scope: root, dependencies: [reduced] },
+  )
+
   const words = d.hero.words
 
   return (
     <section ref={root} data-ready={ready || reduced ? '' : undefined} className="hero relative flex min-h-[100svh] items-center overflow-hidden pt-24 pb-16">
       {/* CSS glow fallback (also visible while the 3D scene loads) */}
-      <div aria-hidden className="absolute top-1/2 right-[-10%] h-[70vmin] w-[70vmin] -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(34_211_238/0.16),rgb(168_85_247/0.06)_60%,transparent)] blur-xl max-md:right-1/2 max-md:translate-x-1/2" />
+      <div aria-hidden className="absolute top-1/2 right-[-10%] h-[70vmin] w-[70vmin] -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(var(--cyan-rgb)/0.16),rgb(var(--purple-rgb)/0.06)_60%,transparent)] blur-xl max-md:right-1/2 max-md:translate-x-1/2" />
 
-      <div data-hero-globe className="absolute inset-y-0 right-[-14%] w-[78%] max-md:inset-x-[-30%] max-md:right-auto max-md:w-auto max-md:opacity-45">
-        <Suspense fallback={null}>
-          <NetworkGlobe theme={theme} reduced={reduced} className="h-full w-full" />
-        </Suspense>
-      </div>
+      <HeroScene />
+      {/* Cursor spotlight */}
+      <div aria-hidden data-hero-spot className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-700" style={{ background: 'radial-gradient(520px circle at var(--hx, 50%) var(--hy, 50%), rgb(var(--cyan-rgb) / 0.12), transparent 65%)' }} />
 
       <div data-hero-content className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8">
         <div data-hero-fade className="hero-fade mb-6 inline-flex items-center gap-2 rounded-full border border-cyan/25 bg-cyan-soft px-3 py-1.5">
@@ -69,7 +106,7 @@ export function Hero() {
           <DecryptText text={d.hero.eyebrow} trigger={introDone} delay={0.4} className="font-mono text-[0.7rem] tracking-[0.14em] text-cyan uppercase" />
         </div>
 
-        <h1 className="font-display text-[clamp(2.9rem,8.4vw,7.6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
+        <h1 data-hero-tilt className="font-display text-[clamp(2.9rem,8.4vw,7.6rem)] leading-[0.92] font-semibold tracking-[-0.045em]">
           <span className="sr-only">{words.join(' ')}</span>
           <span aria-hidden className="block">
             {[words.slice(0, 2), words.slice(2)].map((line, li) => (
@@ -78,7 +115,7 @@ export function Hero() {
                   const isLast = li === 1 && i === line.length - 1
                   return (
                     <span key={w} className="mr-[0.22em] inline-block overflow-hidden pb-[0.08em] align-bottom last:mr-0">
-                      <span data-hero-word className={cn('hero-word inline-block origin-bottom-left', isLast && 'text-gradient')}>
+                      <span data-hero-word data-text={w} className={cn('hero-word inline-block origin-bottom-left', isLast && 'text-gradient hero-accent-word')}>
                         {w}
                       </span>
                     </span>

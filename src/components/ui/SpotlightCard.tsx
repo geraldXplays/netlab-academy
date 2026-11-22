@@ -8,7 +8,7 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   glow?: 'cyan' | 'purple' | 'blue'
 }
 
-const glowColor = { cyan: '34 211 238', purple: '168 85 247', blue: '59 130 246' }
+const glowColor = { cyan: 'var(--cyan-rgb)', purple: 'var(--purple-rgb)', blue: 'var(--blue-rgb)' }
 
 /**
  * Glass card with a pointer-following spotlight and optional 3D tilt.

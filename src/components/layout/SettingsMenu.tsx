@@ -5,12 +5,17 @@ import { Segmented } from '@/components/ui/Segmented'
 import { useSettings, type MotionPref, type Theme } from '@/store/settings'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/cn'
+import { transitionTheme } from '@/themes/transition'
+import { useReducedMotionPref } from '@/hooks/useReducedMotion'
 
 /** Theme quick-toggle + popover with appearance & motion preferences. */
 export function SettingsMenu({ up = false }: { up?: boolean }) {
   const { d } = useI18n()
-  const { theme, setTheme, toggleTheme, motion: motionPref, setMotion } = useSettings()
+  const { theme, setTheme, motion: motionPref, setMotion } = useSettings()
   const [open, setOpen] = useState(false)
+  const reduced = useReducedMotionPref()
+  const swap = (next: Theme, e?: { clientX: number; clientY: number }) =>
+    next !== theme && transitionTheme(() => setTheme(next), e ? { x: e.clientX, y: e.clientY } : undefined, reduced)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -29,7 +34,7 @@ export function SettingsMenu({ up = false }: { up?: boolean }) {
 
   return (
     <div ref={ref} className="relative flex items-center gap-1">
-      <button onClick={toggleTheme} className={iconBtn} aria-label={`${d.nav.theme}: ${theme === 'dark' ? d.nav.themeLight : d.nav.themeDark}`}>
+      <button onClick={(e) => swap(theme === 'dark' ? 'light' : 'dark', e)} className={iconBtn} aria-label={`${d.nav.theme}: ${theme === 'dark' ? d.nav.themeLight : d.nav.themeDark}`}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={theme}
@@ -60,7 +65,7 @@ export function SettingsMenu({ up = false }: { up?: boolean }) {
             <Segmented<Theme>
               label={d.nav.theme}
               value={theme}
-              onChange={setTheme}
+              onChange={(v) => swap(v)}
               options={[
                 { value: 'dark', label: d.nav.themeDark },
                 { value: 'light', label: d.nav.themeLight },

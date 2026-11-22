@@ -46,7 +46,7 @@ export function Missions({ className }: { className?: string }) {
                       whileHover={{ scale: 1.06 }}
                       whileTap={{ scale: 0.94 }}
                       onClick={() => claim(m.id)}
-                      className="rounded-full bg-cyan px-3 py-1.5 text-xs font-semibold text-bg shadow-[0_0_18px_rgb(34_211_238/0.5)]"
+                      className="rounded-full bg-cyan px-3 py-1.5 text-xs font-semibold text-on-accent shadow-[0_0_18px_rgb(var(--cyan-rgb)/0.5)]"
                     >
                       {d.dash.claim}
                     </motion.button>

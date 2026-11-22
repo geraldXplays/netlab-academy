@@ -50,6 +50,31 @@ src/
   pages/         Route components
 ```
 
+## Visual identities
+
+16 switchable looks (palette button in the navbar), each with dark and light palettes, its own fonts,
+shapes, an animated hero scene and a cursor-trail style:
+
+| Identity | Hero scene |
+|---|---|
+| NetLab Core (default) | Three.js network globe |
+| Frutiger Aero | Sky, aurora ribbons, glossy hills, rising bubbles |
+| Cyberpunk 2077 | Neon skyline, signs, rain, hologram, glitch |
+| Candy Land | Bouncing jelly gummies with faces, sprinkles |
+| Apple Minimalism | Soft orb and hairline silk waves |
+| Synthwave | Striped sunset, wireframe mountains, neon grid |
+| Dark Academia | Gold astrolabe with levels I–VI and an inked network |
+| Voxel World | Three.js block island with server racks, LEDs, packets |
+| Neo-Tokyo Anime | Moon, lattice tower, light streaks, sakura petals |
+| Solarpunk | Sun rays, plant-covered towers, turbines, growing vines |
+| Space Exploration | Six planets (L1–L6) orbiting a star |
+| Fusions | Aero×Apple, Cyberpunk×Space, Candy×3D, Solarpunk×Aero, Academia×Apple |
+
+- Definitions: `src/themes/identities.ts` (pure data). Variables: `src/themes/apply.ts`. Shapes/textures: `src/styles/identities.css`.
+- Scenes: `src/components/fx/scenes/` — each is lazy-loaded, paused off-screen and static under reduced motion.
+- Theme / identity switches use a View Transition circular reveal from the click point.
+- Cursor layer (`CursorFX`): ring cursor, themed trail and click sparks; fine pointers only.
+
 ## Key decisions
 
 - **Progress is saved in the browser** (localStorage), behind a `StateStorage` adapter, so a backend such as Supabase can be added later without changing components.

@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect } from 'react'
+import { applyIdentity } from '@/themes/apply'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/RootLayout'
 import { SmoothScroll } from '@/providers/SmoothScroll'
@@ -44,14 +45,14 @@ const router = createBrowserRouter([
 function SettingsSync() {
   const theme = useSettings((st) => st.theme)
   const lang = useSettings((st) => st.lang)
+  const identity = useSettings((st) => st.identity)
   const reduced = useReducedMotionPref()
+  useLayoutEffect(() => applyIdentity(identity, theme), [identity, theme])
   useEffect(() => {
     const root = document.documentElement
-    root.dataset.theme = theme
     root.lang = lang
     root.dataset.motion = reduced ? 'reduced' : 'full'
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#03060d' : '#f3f6fb')
-  }, [theme, lang, reduced])
+  }, [lang, reduced])
   return null
 }
 

@@ -92,9 +92,10 @@ export default function NetworkGlobe({ theme, reduced, className }: Props) {
     scene.add(root)
 
     const blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
-    const cA = new THREE.Color(light ? '#0891b2' : '#22d3ee')
-    const cB = new THREE.Color(light ? '#2563eb' : '#3b82f6')
-    const cC = new THREE.Color(light ? '#7c3aed' : '#a855f7')
+    const css = getComputedStyle(document.documentElement)
+    const cA = new THREE.Color(css.getPropertyValue('--cyan').trim() || '#22d3ee')
+    const cB = new THREE.Color(css.getPropertyValue('--blue').trim() || '#3b82f6')
+    const cC = new THREE.Color(css.getPropertyValue('--purple').trim() || '#a855f7')
 
     const uniforms = {
       uProgress: { value: reduced ? 1 : 0 },
@@ -193,7 +194,7 @@ export default function NetworkGlobe({ theme, reduced, className }: Props) {
       speed: 0.25 + Math.random() * 0.6,
       dir: Math.random() > 0.5 ? 1 : -1,
     }))
-    for (let i = 0; i < P; i++) (i % 5 === 0 ? cC : light ? cB : new THREE.Color('#bff6ff')).toArray(packetCol, i * 3)
+    for (let i = 0; i < P; i++) (i % 5 === 0 ? cC : light ? cB : cA.clone().lerp(new THREE.Color('#ffffff'), 0.7)).toArray(packetCol, i * 3)
     packetGeo.setAttribute('position', new THREE.BufferAttribute(packetPos, 3))
     packetGeo.setAttribute('aColor', new THREE.BufferAttribute(packetCol, 3))
     packetGeo.setAttribute('aSize', new THREE.BufferAttribute(packetSize, 1))
@@ -258,7 +259,7 @@ export default function NetworkGlobe({ theme, reduced, className }: Props) {
     dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3))
     const dustMat = new THREE.PointsMaterial({
       size: 0.025,
-      color: light ? '#64748b' : '#7dd3fc',
+      color: light ? css.getPropertyValue('--text-dim').trim() : cA.clone().lerp(new THREE.Color('#ffffff'), 0.5),
       transparent: true,
       opacity: 0,
       depthWrite: false,

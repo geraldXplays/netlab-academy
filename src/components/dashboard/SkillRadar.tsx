@@ -40,7 +40,7 @@ export function SkillRadar({ values }: { values: Record<string, number> }) {
         whileInView={{ scale: 1, opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-        style={{ transformOrigin: `${c}px ${c}px`, filter: 'drop-shadow(0 0 8px rgb(34 211 238 / 0.35))' }}
+        style={{ transformOrigin: `${c}px ${c}px`, filter: 'drop-shadow(0 0 8px rgb(var(--cyan-rgb) / 0.35))' }}
       />
       {SKILLS.map((s, i) => {
         const [x, y] = pt(i, R * Math.max(0.04, (values[s.id] ?? 0) / 100))

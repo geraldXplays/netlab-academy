@@ -75,7 +75,7 @@ export function Preloader() {
       </div>
       <div data-boot-content className="absolute inset-0 grid place-items-center">
         <div className="flex w-[min(360px,82vw)] flex-col items-center">
-          <LogoMark animated className="h-20 w-20 drop-shadow-[0_0_24px_rgb(34_211_238/0.5)]" />
+          <LogoMark animated className="h-20 w-20 drop-shadow-[0_0_24px_rgb(var(--cyan-rgb)/0.5)]" />
           <p className="mt-5 font-display text-xl font-semibold tracking-tight">
             NetLab<span className="text-cyan">.</span> <span className="font-normal text-muted">Academy</span>
           </p>

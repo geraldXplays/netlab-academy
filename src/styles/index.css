@@ -1,15 +1,25 @@
 @import '@fontsource-variable/space-grotesk';
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/nunito';
+@import '@fontsource-variable/orbitron';
+@import '@fontsource-variable/fredoka';
+@import '@fontsource/audiowide/latin.css';
+@import '@fontsource-variable/cormorant-garamond';
+@import '@fontsource-variable/eb-garamond';
+@import '@fontsource/silkscreen/latin.css';
+@import '@fontsource/zen-dots/latin.css';
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/exo-2';
 @import 'tailwindcss';
+@import './identities.css';
 
 /* ------------------------------------------------------------------
    NetLab design tokens
    Raw values live on :root / [data-theme]; Tailwind maps them below so
    every utility (bg-surface, text-muted, border-line…) follows the theme.
 ------------------------------------------------------------------- */
-:root,
-[data-theme='dark'] {
+:root {
   color-scheme: dark;
   --bg: #03060d;
   --bg-2: #060b18;
@@ -32,31 +42,15 @@
   --grid: rgb(56 189 248 / 0.055);
   --glow-cyan: 0 0 24px rgb(34 211 238 / 0.35);
   --shadow: 0 20px 60px -20px rgb(0 0 0 / 0.7);
-}
-
-[data-theme='light'] {
-  color-scheme: light;
-  --bg: #f3f6fb;
-  --bg-2: #e9eef7;
-  --bg-3: #dde5f2;
-  --surface: rgb(255 255 255 / 0.68);
-  --surface-strong: rgb(255 255 255 / 0.9);
-  --line: rgb(15 40 80 / 0.1);
-  --line-strong: rgb(15 40 80 / 0.2);
-  --text: #0a1428;
-  --text-muted: #44546f;
-  --text-dim: #7a879d;
-  --cyan: #0891b2;
-  --cyan-soft: rgb(8 145 178 / 0.1);
-  --blue: #2563eb;
-  --purple: #7c3aed;
-  --purple-soft: rgb(124 58 237 / 0.1);
-  --success: #059669;
-  --warning: #b45309;
-  --danger: #e11d48;
-  --grid: rgb(15 60 120 / 0.06);
-  --glow-cyan: 0 0 18px rgb(8 145 178 / 0.2);
-  --shadow: 0 20px 50px -24px rgb(15 30 60 / 0.25);
+  --on-accent: #03060d;
+  --cyan-rgb: 34 211 238;
+  --blue-rgb: 59 130 246;
+  --purple-rgb: 168 85 247;
+  --danger-rgb: 244 63 94;
+  --text-rgb: 238 244 255;
+  --bg-rgb: 3 6 13;
+  --id-font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --id-font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
@@ -79,8 +73,9 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
 
-  --font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-on-accent: var(--on-accent);
+  --font-display: var(--id-font-display);
+  --font-sans: var(--id-font-body);
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -97,7 +92,7 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--id-font-body);
   min-height: 100dvh;
   overflow-x: clip;
 }
@@ -181,7 +176,7 @@ html.lenis body {
     inset: 0;
     padding: 1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgb(34 211 238 / 0.55), transparent 40%, transparent 60%, rgb(168 85 247 / 0.5));
+    background: linear-gradient(135deg, rgb(var(--cyan-rgb) / 0.55), transparent 40%, transparent 60%, rgb(var(--purple-rgb) / 0.5));
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
     -webkit-mask-composite: xor;
@@ -237,6 +232,20 @@ html.lenis body {
   background: linear-gradient(90deg, var(--surface) 25%, var(--line-strong) 50%, var(--surface) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
+}
+
+/* --------------------- Theme / identity transitions --------------------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+html.theme-fade *,
+html.theme-fade *::before,
+html.theme-fade *::after {
+  transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease, fill 0.45s ease !important;
 }
 
 /* Respect reduced motion globally for CSS-driven animation. JS-driven

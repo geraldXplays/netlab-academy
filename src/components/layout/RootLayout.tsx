@@ -6,6 +6,7 @@ import { Toaster } from './Toaster'
 import { ScrollProgress } from './ScrollProgress'
 import { Preloader } from './Preloader'
 import { Backdrop } from '@/components/fx/Backdrop'
+import { CursorFX } from '@/components/fx/CursorFX'
 import { useLenis } from '@/providers/SmoothScroll'
 import { ScrollTrigger } from '@/lib/gsap'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
@@ -47,6 +48,7 @@ export function RootLayout() {
       </AnimatePresence>
       <Footer />
       <Toaster />
+      <CursorFX />
     </>
   )
 }
@@ -61,7 +63,7 @@ function RouteSweep() {
       animate={{ y: '110vh', opacity: 0 }}
       transition={{ duration: 0.9, ease: [0.65, 0, 0.35, 1] }}
     >
-      <div className="absolute inset-x-0 top-1/2 h-px bg-cyan/60 shadow-[0_0_14px_rgb(34_211_238)]" />
+      <div className="absolute inset-x-0 top-1/2 h-px bg-cyan/60 shadow-[0_0_14px_rgb(var(--cyan-rgb))]" />
     </motion.div>
   )
 }

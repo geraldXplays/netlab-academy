@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-identity="netlab">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -8,11 +8,17 @@
     <meta name="description" content="NetLab Academy — Build. Connect. Configure. Master. An immersive networking and IT infrastructure training platform." />
     <title>NetLab Academy</title>
     <script>
-      // Apply saved theme / language before first paint to avoid a flash.
+      // Apply the saved identity, theme and language before first paint (no flash).
       try {
         var s = JSON.parse(localStorage.getItem('netlab:settings') || '{}').state || {};
-        if (s.theme) document.documentElement.dataset.theme = s.theme;
         if (s.lang) document.documentElement.lang = s.lang;
+        var c = JSON.parse(localStorage.getItem('netlab:vars') || 'null');
+        if (c && c.vars) {
+          var r = document.documentElement;
+          for (var k in c.vars) r.style.setProperty(k, c.vars[k]);
+          r.dataset.theme = c.mode;
+          r.dataset.identity = c.id;
+        }
       } catch (e) {}
     </script>
   </head>

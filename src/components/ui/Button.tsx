@@ -27,7 +27,7 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-cyan text-bg shadow-[0_0_0_1px_rgb(34_211_238/0.4),0_8px_30px_-6px_rgb(34_211_238/0.55)] hover:shadow-[0_0_0_1px_rgb(34_211_238/0.7),0_10px_44px_-4px_rgb(34_211_238/0.75)]',
+    'bg-cyan text-on-accent shadow-[0_0_0_1px_rgb(var(--cyan-rgb)/0.4),0_8px_30px_-6px_rgb(var(--cyan-rgb)/0.55)] hover:shadow-[0_0_0_1px_rgb(var(--cyan-rgb)/0.7),0_10px_44px_-4px_rgb(var(--cyan-rgb)/0.75)]',
   secondary: 'glass text-text hover:border-line-strong hover:bg-surface-strong',
   ghost: 'text-muted hover:text-text hover:bg-cyan-soft',
 }
@@ -76,7 +76,7 @@ export const Button = forwardRef<HTMLElement, ButtonProps>(function Button(props
     </>
   )
 
-  const cls = cn(base, variants[variant], sizes[size], className)
+  const cls = cn('btn', `btn-${variant}`, base, variants[variant], sizes[size], className)
 
   let el: ReactNode
   if ('to' in rest && rest.to !== undefined) {

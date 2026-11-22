@@ -31,10 +31,10 @@ export function FinalCta() {
         <ParticleField />
         <div aria-hidden className="absolute top-1/2 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan/10" />
         <div aria-hidden className="absolute top-1/2 left-1/2 h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 animate-spin-slow rounded-full border border-dashed border-purple/20" />
-        <div aria-hidden className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(34_211_238/0.2),transparent)] blur-xl" />
+        <div aria-hidden className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(var(--cyan-rgb)/0.2),transparent)] blur-xl" />
         <div className="relative flex flex-col items-center px-6 py-28 text-center md:py-36">
           <div data-cta-item>
-            <LogoMark className="h-14 w-14 drop-shadow-[0_0_20px_rgb(34_211_238/0.5)]" />
+            <LogoMark className="h-14 w-14 drop-shadow-[0_0_20px_rgb(var(--cyan-rgb)/0.5)]" />
           </div>
           <h2 data-cta-item className="mt-8 max-w-3xl font-display text-[clamp(2.4rem,6vw,5rem)] leading-[0.98] font-semibold tracking-[-0.045em]">
             <span className="text-gradient">{d.cta.title}</span>

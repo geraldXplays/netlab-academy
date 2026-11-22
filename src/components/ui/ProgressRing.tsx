@@ -37,7 +37,7 @@ export function ProgressRing({ value, size = 160, stroke = 10, children, delay =
           whileInView={{ strokeDashoffset: c * (1 - v) }}
           viewport={{ once: true }}
           transition={{ duration: 1.8, delay, ease: [0.16, 1, 0.3, 1] }}
-          style={{ filter: 'drop-shadow(0 0 6px rgb(34 211 238 / 0.5))' }}
+          style={{ filter: 'drop-shadow(0 0 6px rgb(var(--cyan-rgb) / 0.5))' }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">{children}</div>

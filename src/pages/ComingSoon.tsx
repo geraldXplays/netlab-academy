@@ -33,7 +33,7 @@ export default function ComingSoon({ section }: { section: Section }) {
       <section className="glass hud-corners relative overflow-hidden rounded-[2rem] px-6 py-16 text-center sm:px-12">
         <ParticleField density={0.00005} />
         <motion.div
-          className="relative mx-auto grid h-20 w-20 place-items-center rounded-3xl border border-cyan/30 bg-cyan-soft text-cyan shadow-[0_0_40px_rgb(34_211_238/0.25)]"
+          className="relative mx-auto grid h-20 w-20 place-items-center rounded-3xl border border-cyan/30 bg-cyan-soft text-cyan shadow-[0_0_40px_rgb(var(--cyan-rgb)/0.25)]"
           initial={{ scale: 0.4, rotate: -30, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.15 }}
