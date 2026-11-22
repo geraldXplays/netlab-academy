@@ -1,0 +1,251 @@
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------
+   NetLab design tokens
+   Raw values live on :root / [data-theme]; Tailwind maps them below so
+   every utility (bg-surface, text-muted, border-line…) follows the theme.
+------------------------------------------------------------------- */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #03060d;
+  --bg-2: #060b18;
+  --bg-3: #0a1224;
+  --surface: rgb(13 22 43 / 0.55);
+  --surface-strong: rgb(15 25 50 / 0.82);
+  --line: rgb(125 211 252 / 0.1);
+  --line-strong: rgb(125 211 252 / 0.22);
+  --text: #eef4ff;
+  --text-muted: #9fb0cc;
+  --text-dim: #62728f;
+  --cyan: #22d3ee;
+  --cyan-soft: rgb(34 211 238 / 0.14);
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --purple-soft: rgb(168 85 247 / 0.14);
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f43f5e;
+  --grid: rgb(56 189 248 / 0.055);
+  --glow-cyan: 0 0 24px rgb(34 211 238 / 0.35);
+  --shadow: 0 20px 60px -20px rgb(0 0 0 / 0.7);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f3f6fb;
+  --bg-2: #e9eef7;
+  --bg-3: #dde5f2;
+  --surface: rgb(255 255 255 / 0.68);
+  --surface-strong: rgb(255 255 255 / 0.9);
+  --line: rgb(15 40 80 / 0.1);
+  --line-strong: rgb(15 40 80 / 0.2);
+  --text: #0a1428;
+  --text-muted: #44546f;
+  --text-dim: #7a879d;
+  --cyan: #0891b2;
+  --cyan-soft: rgb(8 145 178 / 0.1);
+  --blue: #2563eb;
+  --purple: #7c3aed;
+  --purple-soft: rgb(124 58 237 / 0.1);
+  --success: #059669;
+  --warning: #b45309;
+  --danger: #e11d48;
+  --grid: rgb(15 60 120 / 0.06);
+  --glow-cyan: 0 0 18px rgb(8 145 178 / 0.2);
+  --shadow: 0 20px 50px -24px rgb(15 30 60 / 0.25);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-dim: var(--text-dim);
+  --color-cyan: var(--cyan);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-blue: var(--blue);
+  --color-purple: var(--purple);
+  --color-purple-soft: var(--purple-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-display: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-circ: cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+/* ------------------------------ Base ------------------------------ */
+html {
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+::selection {
+  background: var(--cyan);
+  color: var(--bg);
+}
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Lenis recommended styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* --------------------------- Components --------------------------- */
+@layer components {
+  .glass {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+  .glass-strong {
+    background: var(--surface-strong);
+    border: 1px solid var(--line-strong);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+  }
+  .hud-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .text-gradient {
+    background: linear-gradient(100deg, var(--text) 10%, var(--cyan) 55%, var(--purple) 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-cyan {
+    background: linear-gradient(100deg, var(--cyan), var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .mask-fade-y {
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  }
+  .mask-radial {
+    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  }
+  /* Gradient hairline border — wrap content in .glow-border */
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgb(34 211 238 / 0.55), transparent 40%, transparent 60%, rgb(168 85 247 / 0.5));
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+  }
+  /* Corner brackets for HUD panels */
+  .hud-corners {
+    position: relative;
+  }
+  .hud-corners::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(var(--cyan), var(--cyan)) top left / 14px 1px,
+      linear-gradient(var(--cyan), var(--cyan)) top left / 1px 14px,
+      linear-gradient(var(--cyan), var(--cyan)) bottom right / 14px 1px,
+      linear-gradient(var(--cyan), var(--cyan)) bottom right / 1px 14px;
+    background-repeat: no-repeat;
+    opacity: 0.7;
+  }
+}
+
+/* ---------------------------- Keyframes ---------------------------- */
+@keyframes scan {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(100%); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes dash-flow {
+  to { stroke-dashoffset: -40; }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.animate-blink { animation: blink 1s steps(1) infinite; }
+.animate-spin-slow { animation: spin-slow 24s linear infinite; }
+.animate-dash { animation: dash-flow 1.2s linear infinite; }
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--line-strong) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Respect reduced motion globally for CSS-driven animation. JS-driven
+   animation reads the same preference via useReducedMotionPref(). */
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
