@@ -12,6 +12,8 @@ import Landing from '@/pages/Landing'
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const ComingSoon = lazy(() => import('@/pages/ComingSoon'))
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'))
+const AcademyPage = lazy(() => import('@/pages/AcademyPage'))
+const LessonPage = lazy(() => import('@/pages/LessonPage'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const Loading = () => (
@@ -31,7 +33,9 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Landing /> },
       { path: '/dashboard', element: s(<Dashboard />) },
-      { path: '/academy', element: s(<ComingSoon section="academy" />) },
+      { path: '/academy', element: s(<AcademyPage />) },
+      { path: '/academy/:levelId', element: s(<AcademyPage />) },
+      { path: '/learn/:lessonId', element: s(<LessonPage />) },
       { path: '/labs', element: s(<ComingSoon section="labs" />) },
       { path: '/simulator', element: s(<ComingSoon section="simulator" />) },
       { path: '/dictionary', element: s(<ComingSoon section="dictionary" />) },

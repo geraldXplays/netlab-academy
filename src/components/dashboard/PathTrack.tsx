@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import { Link } from 'react-router-dom'
 import { Check, Lock } from 'lucide-react'
 import { LEVELS } from '@/content/curriculum'
 import { useProgress, levelProgress, isLevelUnlocked } from '@/store/progress'
@@ -52,7 +53,7 @@ export function PathTrack() {
               {status === 'inProgress' && <span className="absolute inset-0 animate-ping rounded-2xl border border-cyan/40" />}
               {status === 'complete' ? <Check size={18} /> : status === 'locked' ? <Lock size={15} /> : `0${lvl.number}`}
             </span>
-            <p className={cn('mt-3 text-sm leading-tight font-medium', status === 'locked' ? 'text-dim' : 'text-text')}>{l(lvl.title)}</p>
+            <Link to={`/academy/${lvl.id}`} className={cn('mt-3 text-sm leading-tight font-medium hover:text-cyan', status === 'locked' ? 'text-dim' : 'text-text')}>{l(lvl.title)}</Link>
             <p className="mt-1 font-mono text-[0.65rem] tracking-wider text-dim uppercase">
               {d.dash[status]} · {Math.round(p.ratio * 100)}%
             </p>

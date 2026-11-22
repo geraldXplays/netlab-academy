@@ -153,7 +153,7 @@ export function IdentityPicker({ open, onClose }: { open: boolean; onClose: () =
                             active ? 'border-cyan bg-cyan-soft shadow-[0_0_0_3px_rgb(var(--cyan-rgb)/0.2)]' : 'border-line hover:border-line-strong',
                           )}
                         >
-                          <Swatch identity={idn} mode={active ? theme : idn.native} />
+                          <Swatch identity={idn} mode={theme} />
                           <div className="px-2 pt-2.5 pb-1.5">
                             <p className="flex items-center gap-1.5 font-medium">
                               {l(idn.name)}

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { localAdapter, STORAGE_KEYS } from '@/lib/storage'
 import type { Lang } from '@/content/types'
-import { identityById, type IdentityId } from '@/themes/identities'
+import type { IdentityId } from '@/themes/identities'
 import { applyIdentity } from '@/themes/apply'
 
 export type Theme = 'dark' | 'light'
@@ -13,7 +13,7 @@ interface SettingsState {
   lang: Lang
   motion: MotionPref
   identity: IdentityId
-  /** Switch identity; adopts its native light/dark mode. */
+  /** Switch identity, keeping the current light/dark mode. */
   setIdentity: (id: IdentityId) => void
   setTheme: (t: Theme) => void
   toggleTheme: () => void
@@ -32,9 +32,9 @@ export const useSettings = create<SettingsState>()(
       motion: 'system',
       identity: 'netlab',
       setIdentity: (identity) => {
-        const theme = identityById(identity).native
-        applyIdentity(identity, theme)
-        set({ identity, theme })
+        // Keep the learner's own dark/light choice across identities.
+        applyIdentity(identity, get().theme)
+        set({ identity })
       },
       setTheme: (theme) => {
         applyIdentity(get().identity, theme)

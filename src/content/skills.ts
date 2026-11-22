@@ -14,3 +14,10 @@ export const SKILLS: Skill[] = [
   { id: 'security', label: { en: 'Security', fr: 'Sécurité' } },
   { id: 'infrastructure', label: { en: 'Infrastructure', fr: 'Infrastructure' } },
 ]
+
+/** Which skill axis each module trains (mastery grows only when its lesson quizzes are passed). */
+export const MODULE_SKILL: Record<string, string> = {
+  'l1-hardware': 'hardware', 'l1-components': 'hardware',
+  'l1-os': 'systems', 'l1-fs': 'systems', 'l1-cli': 'systems',
+  'l1-net-intro': 'networking', 'l1-ethernet': 'networking', 'l1-ip': 'networking', 'l1-mac': 'networking', 'l1-arch': 'networking',
+}

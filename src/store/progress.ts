@@ -7,6 +7,7 @@ import { achievementById } from '@/content/achievements'
 import { missionsForDay, type ActivityKind } from '@/content/missions'
 import { LEVELS, levelLessonIds } from '@/content/curriculum'
 import type { L } from '@/content/types'
+import { MODULE_SKILL } from '@/content/skills'
 import { useNotifications } from './notifications'
 
 type DayActivity = Partial<Record<ActivityKind, number>>
@@ -27,7 +28,24 @@ export interface ProgressData {
   claimedMissions: Record<string, string[]>
   streak: { current: number; best: number; last: string | null }
   isDemo: boolean
+  /** Per-lesson reading state, so learners resume exactly where they left off. */
+  lessonState: Record<string, LessonState>
+  lastLesson: string | null
+  bookmarks: string[]
 }
+
+export interface LessonState {
+  /** 0..1 reading position */
+  scroll: number
+  /** best quiz score 0..1 */
+  best: number
+  attempts: number
+  /** in-lesson knowledge checks answered: blockIndex -> correct? */
+  checks: Record<number, boolean>
+  updated: string
+}
+
+const emptyLesson = (): LessonState => ({ scroll: 0, best: 0, attempts: 0, checks: {}, updated: new Date().toISOString() })
 
 interface ProgressActions {
   setCallsign: (name: string) => void
@@ -38,6 +56,12 @@ interface ProgressActions {
   claimMission: (missionId: string) => void
   loadDemo: () => void
   reset: () => void
+  openLesson: (id: string) => void
+  saveLessonScroll: (id: string, ratio: number) => void
+  answerCheck: (id: string, blockIndex: number, correct: boolean) => void
+  /** Returns true when this submission completed the lesson for the first time. */
+  submitQuiz: (id: string, correct: number, total: number, passRatio: number) => boolean
+  toggleBookmark: (id: string) => void
 }
 
 const fresh = (): ProgressData => ({
@@ -51,6 +75,9 @@ const fresh = (): ProgressData => ({
   claimedMissions: {},
   streak: { current: 0, best: 0, last: null },
   isDemo: false,
+  lessonState: {},
+  lastLesson: null,
+  bookmarks: [],
 })
 
 export const useProgress = create<ProgressData & ProgressActions>()(
@@ -112,11 +139,46 @@ export const useProgress = create<ProgressData & ProgressActions>()(
 
       loadDemo: () => set(demoProfile()),
       reset: () => set(fresh()),
+
+      openLesson: (id) =>
+        set((s) => ({ lastLesson: id, lessonState: { ...s.lessonState, [id]: { ...emptyLesson(), ...s.lessonState[id], updated: new Date().toISOString() } } })),
+
+      saveLessonScroll: (id, ratio) =>
+        set((s) => {
+          const cur = s.lessonState[id] ?? emptyLesson()
+          if (Math.abs(cur.scroll - ratio) < 0.02) return s
+          return { lessonState: { ...s.lessonState, [id]: { ...cur, scroll: ratio, updated: new Date().toISOString() } } }
+        }),
+
+      answerCheck: (id, blockIndex, correct) => {
+        const cur = get().lessonState[id] ?? emptyLesson()
+        if (blockIndex in cur.checks) return
+        set((s) => ({ lessonState: { ...s.lessonState, [id]: { ...cur, checks: { ...cur.checks, [blockIndex]: correct } } } }))
+        if (correct) get().recordActivity('quiz')
+      },
+
+      submitQuiz: (id, correct, total, passRatio) => {
+        const ratio = total ? correct / total : 0
+        const cur = get().lessonState[id] ?? emptyLesson()
+        set((s) => ({ lessonState: { ...s.lessonState, [id]: { ...cur, best: Math.max(cur.best, ratio), attempts: cur.attempts + 1, updated: new Date().toISOString() } } }))
+        if (correct) get().recordActivity('quiz', correct)
+        if (ratio < passRatio || get().completedLessons[id]) return false
+        get().completeLesson(id)
+        get().addXp(40 + Math.round(ratio * 20), { en: 'Lesson completed', fr: 'Leçon terminée' })
+        const skill = MODULE_SKILL[id.split('.')[0]]
+        if (skill) set((s) => ({ skills: { ...s.skills, [skill]: Math.min(100, (s.skills[skill] ?? 0) + Math.round(3 + ratio * 3)) } }))
+        return true
+      },
+
+      toggleBookmark: (id) =>
+        set((s) => ({ bookmarks: s.bookmarks.includes(id) ? s.bookmarks.filter((b) => b !== id) : [...s.bookmarks, id] })),
     }),
     {
       name: STORAGE_KEYS.progress,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localAdapter),
+      // v1 → v2 adds lesson state, resume pointer and bookmarks.
+      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
     },
   ),
 )
@@ -161,8 +223,8 @@ function demoProfile(): ProgressData {
   const today = dayKey()
   const completed: Record<string, string> = {}
   const l1 = levelLessonIds(LEVELS[0])
-  l1.slice(0, 19).forEach((id, i) => {
-    completed[id] = new Date(Date.now() - (19 - i) * 86_400_000 * 0.6).toISOString()
+  l1.slice(0, 9).forEach((id, i) => {
+    completed[id] = new Date(Date.now() - (9 - i) * 86_400_000 * 0.9).toISOString()
   })
   const activity: Record<string, DayActivity> = {}
   lastDays(14).forEach((d, i) => {
@@ -182,5 +244,8 @@ function demoProfile(): ProgressData {
     claimedMissions: {},
     streak: { current: 6, best: 9, last: today },
     isDemo: true,
+    lessonState: {},
+    lastLesson: null,
+    bookmarks: [],
   }
 }

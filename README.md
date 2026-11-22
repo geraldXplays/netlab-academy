@@ -4,13 +4,13 @@
 
 An immersive networking and IT-infrastructure training platform, from absolute beginner to professional infrastructure engineer.
 
-## Status: Phase 1 (visual foundation)
+## Status: Phase 2 (learning platform)
 
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Design system, landing page, navigation, motion system, dashboard | ✅ Done |
-| 2 | Learning paths, modules, lessons, progress tracking | Next |
-| 3 | Quizzes, exams, XP and achievements, skill progression | — |
+| 2 | Learning paths, modules, lessons, progress tracking | ✅ Level 1 complete (20 lessons, EN/FR) |
+| 3 | Quizzes, exams, XP and achievements, skill progression | Next |
 | 4 | Practical labs | — |
 | 5 | IT Operations Simulator | — |
 | 6 | AI tutor, technical dictionary, interactive topology explorer | — |
@@ -49,6 +49,15 @@ src/
   sections/      Landing-page sections
   pages/         Route components
 ```
+
+## Learning content
+
+- Lessons are pure data in `src/content/lessons/l1/*.ts` (bilingual `{ en, fr }` via the `t()` helper).
+  Each lesson: objectives, blocks (text, callout, diagram, example, code, table, knowledge check), vocabulary, "on the job" practice and a final quiz.
+- A lesson is completed only by passing its final quiz (≥ 75 %). That awards XP and raises the matching skill's mastery.
+- Diagrams: `src/components/diagrams/` — animated SVGs keyed by name (`DiagramKey`).
+- Adding a lesson: write it in a content file, add it to `src/content/lessons/index.ts`, and make sure the module's `lessonCount` in `curriculum.ts` matches.
+- Progress (reading position, checks, best score, bookmarks, last lesson) is saved per lesson so learners resume where they left off.
 
 ## Visual identities
 

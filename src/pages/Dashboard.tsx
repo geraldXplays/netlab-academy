@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import { ArrowRight, Compass, Flame, Gauge, Pencil, RotateCcw, Sparkles, Radar as RadarIcon, Route } from 'lucide-react'
 import { useProgress, liveStreak, nextLesson, levelProgress } from '@/store/progress'
 import { LEVELS, ALL_LESSON_IDS } from '@/content/curriculum'
+import { LESSONS, locateLesson } from '@/content/lessons'
 import { levelFromXp, rankForLevel } from '@/lib/xp'
 import { lastDays } from '@/lib/dates'
 import { useI18n } from '@/i18n'
@@ -213,7 +214,8 @@ function LevelTile({ className }: { className?: string }) {
 function NextLessonTile({ className }: { className?: string }) {
   const { d, f, l } = useI18n()
   const state = useProgress()
-  const next = nextLesson(state)
+  const resumeId = state.lastLesson && LESSONS[state.lastLesson] && !state.completedLessons[state.lastLesson] ? state.lastLesson : null
+  const next = (resumeId && locateLesson(resumeId)) ? { ...locateLesson(resumeId)!, id: resumeId } : nextLesson(state)
   if (!next) {
     return (
       <DashCard title={d.dash.next} className={className}>
@@ -229,16 +231,16 @@ function NextLessonTile({ className }: { className?: string }) {
       <p className="font-mono text-xs text-cyan">
         L{next.level.number} · {l(next.level.title)}
       </p>
-      <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-[1.7rem]">{l(next.module.title)}</h3>
+      <h3 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-[1.7rem]">{LESSONS[next.id] ? l(LESSONS[next.id].title) : l(next.module.title)}</h3>
       <p className="mt-1 text-muted">
-        {f(d.dash.nextLesson, { n: next.index })} / {next.module.lessonCount}
+        {l(next.module.title)} · {f(d.dash.nextLesson, { n: next.index })} / {next.module.lessonCount}
       </p>
       <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-6">
         <div className="w-full max-w-[14rem]">
           <p className="mb-1.5 font-mono text-[0.65rem] text-dim">{f(d.dash.lessonsDone, { d: lp.done, t: lp.total })}</p>
           <ProgressBar value={lp.ratio} tone="purple" />
         </div>
-        <Button to="/academy" size="sm" iconRight={<ArrowRight size={15} />}>
+        <Button to={LESSONS[next.id] ? `/learn/${next.id}` : '/academy'} size="sm" iconRight={<ArrowRight size={15} />}>
           {d.dash.continue}
         </Button>
       </div>
