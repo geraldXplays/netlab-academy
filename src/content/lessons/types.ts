@@ -27,6 +27,7 @@ export type DiagramKey =
 /** Step-by-step animated examples (components/anim). */
 export type AnimKey = 'osi-encap' | 'tcp-handshake' | 'ipv6-compress' | 'binary-and' | 'subnet-split' | 'vlsm'
   | 'mac-learning' | 'arp' | 'route-lookup' | 'vlan-tag' | 'router-on-stick' | 'stp' | 'dynamic-routing'
+  | 'dhcp-dora' | 'dns-resolve' | 'nat-pat' | 'ts-method'
 /** Interactive widgets learners can play with. */
 export type WidgetKey = 'subnet-calc'
 

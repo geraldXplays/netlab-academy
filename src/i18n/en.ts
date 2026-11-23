@@ -311,7 +311,7 @@ export const en = {
     lessons: 'lessons',
     minutes: '{n} min',
     locked: 'Locked',
-    lockedHint: 'Complete every lesson of Level {n} to unlock.',
+    lockedHint: 'Pass the Level {n} certification exam (Assessment Center) to unlock. You can preview the lessons below.',
     inProduction: 'In production',
     inProductionHint: 'Lessons for this level are being written. You can already explore the outline.',
     complete: 'Completed',

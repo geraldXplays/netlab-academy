@@ -313,7 +313,7 @@ export const fr: Dict = {
     lessons: 'leçons',
     minutes: '{n} min',
     locked: 'Verrouillé',
-    lockedHint: 'Terminez toutes les leçons du niveau {n} pour débloquer.',
+    lockedHint: 'Réussissez l’examen de certification du niveau {n} (Centre d’évaluation) pour débloquer. Vous pouvez déjà consulter les leçons ci-dessous.',
     inProduction: 'En production',
     inProductionHint: 'Les leçons de ce niveau sont en cours d’écriture. Vous pouvez déjà explorer le programme.',
     complete: 'Terminée',

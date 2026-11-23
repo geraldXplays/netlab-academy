@@ -11,6 +11,8 @@ import { ipv46Lessons } from './l2/ip'
 import { subnetLessons } from './l2/subnet'
 import { switchLessons, routerLessons } from './l2/switching'
 import { vlanLessons, trunkLessons, routingLessons } from './l2/vlan'
+import { dhcpLessons, dnsLessons, natLessons } from './l2/services'
+import { ptLessons, troubleshootLessons } from './l2/practice'
 
 export * from './types'
 
@@ -19,6 +21,7 @@ const ALL: Lesson[] = [
   ...netIntroLessons, ...ethernetLessons, ...ipLessons, ...macLessons, ...archLessons,
   ...osiLessons, ...ipv46Lessons, ...subnetLessons,
   ...switchLessons, ...routerLessons, ...vlanLessons, ...trunkLessons, ...routingLessons,
+  ...dhcpLessons, ...dnsLessons, ...natLessons, ...ptLessons, ...troubleshootLessons,
 ]
 
 export const LESSONS: Record<string, Lesson> = Object.fromEntries(ALL.map((l) => [l.id, l]))

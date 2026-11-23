@@ -242,7 +242,7 @@ function LevelView({ levelId }: { levelId: string }) {
                     const isDone = !!state.completedLessons[id]
                     const started = !!st && !isDone
                     const row = (
-                      <div className={cn('flex items-center gap-4 px-5 py-3.5 transition-colors', ls && unlocked ? 'hover:bg-cyan-soft' : 'opacity-55')}>
+                      <div className={cn('flex items-center gap-4 px-5 py-3.5 transition-colors', ls ? cn('hover:bg-cyan-soft', !unlocked && 'opacity-80') : 'opacity-55')}>
                         <span className="shrink-0">
                           {isDone ? <CheckCircle2 size={18} className="text-success" /> : started ? <CircleDot size={18} className="text-cyan" /> : <Circle size={18} className="text-dim" />}
                         </span>
@@ -253,14 +253,14 @@ function LevelView({ levelId }: { levelId: string }) {
                             {st && st.best > 0 && <span>· {f(d.learn.best, { n: Math.round(st.best * 100) })}</span>}
                           </p>
                         </div>
-                        {ls && unlocked && (
+                        {ls && (
                           <span className="font-mono text-[0.68rem] tracking-wider text-cyan uppercase">
-                            {isDone ? d.learn.review : started ? d.learn.resumeLesson : d.learn.start}
+                            {!unlocked ? (lang === 'fr' ? 'Aperçu' : 'Preview') : isDone ? d.learn.review : started ? d.learn.resumeLesson : d.learn.start}
                           </span>
                         )}
                       </div>
                     )
-                    return <li key={id}>{ls && unlocked ? <Link to={`/learn/${id}`}>{row}</Link> : row}</li>
+                    return <li key={id}>{ls ? <Link to={`/learn/${id}`}>{row}</Link> : row}</li>
                   })}
                 </ul>
               </section>

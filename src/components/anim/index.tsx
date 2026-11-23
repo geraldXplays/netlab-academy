@@ -4,6 +4,7 @@ import { useI18n } from '@/i18n'
 import { Player, type AnimSpec } from './Player'
 import { binaryAnd, ipv6Compress, osiEncap, subnetSplit, tcpHandshake, vlsm } from './net1'
 import { SubnetCalc } from './SubnetCalc'
+import { dhcpDora, dnsResolve, natPat, tsMethod } from './net3'
 import { arpAnim, dynamicRouting, macLearning, routeLookup, routerOnStick, stpAnim, vlanTag } from './net2'
 
 export const ANIMS: Record<AnimKey, (fr: boolean) => AnimSpec> = {
@@ -20,6 +21,10 @@ export const ANIMS: Record<AnimKey, (fr: boolean) => AnimSpec> = {
   'router-on-stick': routerOnStick,
   stp: stpAnim,
   'dynamic-routing': dynamicRouting,
+  'dhcp-dora': dhcpDora,
+  'dns-resolve': dnsResolve,
+  'nat-pat': natPat,
+  'ts-method': tsMethod,
 }
 
 export const WIDGETS: Record<WidgetKey, ComponentType> = {
