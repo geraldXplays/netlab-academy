@@ -4,15 +4,15 @@
 
 An immersive networking and IT-infrastructure training platform, from absolute beginner to professional infrastructure engineer.
 
-## Status: Phase 3 (assessments)
+## Status: Phase 4 (labs & network simulator)
 
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Design system, landing page, navigation, motion system, dashboard | ✅ Done |
 | 2 | Learning paths, modules, lessons, progress tracking | ✅ Level 1 complete (20 lessons, EN/FR) |
 | 3 | Quizzes, exams, XP and achievements, skill progression | ✅ Done |
-| 4 | Practical labs (incl. a Packet-Tracer-style web simulator) | Next |
-| 5 | IT Operations Simulator | — |
+| 4 | Practical labs (incl. a Packet-Tracer-style web simulator) | ✅ Done |
+| 5 | IT Operations Simulator | Next |
 | 6 | AI tutor, technical dictionary, interactive topology explorer | — |
 
 ## Stack
@@ -68,6 +68,19 @@ src/
 - `src/content/assessments.ts`: checkpoints, practicals and the Level 1 certification exam (80 %, 45 min). Passing it issues a printable certificate and unlocks Level 2.
 - Practice arena: addressing drills, subnetting sprint, command recall, weak-spot review.
 - Badges are awarded only from results (lesson quizzes, assessments, practice, correct troubleshooting answers).
+
+## Labs & network simulator (Phase 4)
+
+- **Engine** (`src/sim/`, pure TypeScript, unit-testable): VLAN-aware Layer 2 (access/trunk ports), ARP with caches,
+  routers with connected + static routes, interfaces shut by default, ping/tracert with per-hop traces.
+- **CLIs:** Cisco-IOS-style (`ios.ts`: modes, abbreviations, `interface range`, VLANs, `ip route`, `show ip int brief`,
+  `show vlan brief`, `show run`, `show ip route`) and a Windows-style PC prompt (`host.ts`).
+- **Workspace** (`src/components/sim/`): device palette, drag & drop, cable tool with port picker, Packet Tracer link
+  lights, device windows (Physical / Config with equivalent IOS commands / Desktop / CLI), Simple PDU tool,
+  Realtime vs Simulation mode with animated envelopes and an event list.
+- **Labs** (`src/content/labs.ts`): Lab 1 (first network), Lab 2 (router), Lab 3 (VLANs + trunk), Lab 6 (small business:
+  firewall, edge router, default/return routes, fault finding) are auto-graded in the simulator; Labs 4–5 (Windows
+  Server/AD, Ubuntu server) are guided VirtualBox labs with graded checkpoints. Work in progress is saved and synced.
 
 ## Learning content
 

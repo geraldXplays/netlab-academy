@@ -10,6 +10,7 @@ import type { L } from '@/content/types'
 import { MODULE_SKILL } from '@/content/skills'
 import { useNotifications } from './notifications'
 import type { Question } from '@/content/lessons/types'
+import type { Topology } from '@/sim/types'
 
 type DayActivity = Partial<Record<ActivityKind, number>>
 
@@ -41,7 +42,23 @@ export interface ProgressData {
   tagCounts: Record<string, number>
   /** levelId -> certificate */
   certificates: Record<string, { date: string; score: number; code: string }>
+  /** labId -> saved work, so a lab resumes exactly where it was left */
+  labs: Record<string, LabState>
 }
+
+export interface LabState {
+  topology?: Topology
+  best: number
+  completedAt?: string
+  hints: number
+  /** guided labs: ticked step indexes */
+  steps: number[]
+  /** guided labs: checkpoint id -> correct? */
+  answers: Record<string, boolean>
+  updated: string
+}
+
+export const emptyLab = (): LabState => ({ best: 0, hints: 0, steps: [], answers: {}, updated: new Date().toISOString() })
 
 export interface AssessmentResult {
   best: number
@@ -91,6 +108,8 @@ interface ProgressActions {
   recordAnswer: (q: Question & { topic?: string; tags?: string[] }, correct: boolean) => void
   finishAssessment: (a: { id: string; levelId: string; passRatio: number; xp: number; badge?: string; certificate?: boolean; skills?: string[] }, correct: number, total: number) => FinishResult
   finishPractice: (mode: string, correct: number, total: number) => number
+  saveLab: (id: string, patch: Partial<LabState>) => void
+  completeLab: (lab: { id: string; xp: number; badge?: string; noHintBadge?: string; skills: string[] }, ratio: number) => { first: boolean; xp: number }
 }
 
 export const fresh = (): ProgressData => ({
@@ -111,6 +130,7 @@ export const fresh = (): ProgressData => ({
   topicStats: {},
   tagCounts: {},
   certificates: {},
+  labs: {},
 })
 
 export const useProgress = create<ProgressData & ProgressActions>()(
@@ -275,15 +295,36 @@ export const useProgress = create<ProgressData & ProgressActions>()(
         return xp
       },
 
+      saveLab: (id, patch) =>
+        set((s) => ({ labs: { ...s.labs, [id]: { ...emptyLab(), ...s.labs[id], ...patch, updated: new Date().toISOString() } } })),
+
+      completeLab: (lab, ratio) => {
+        const cur = get().labs[lab.id] ?? emptyLab()
+        const first = !cur.completedAt && ratio >= 1
+        get().saveLab(lab.id, { best: Math.max(cur.best, ratio), ...(first ? { completedAt: new Date().toISOString() } : {}) })
+        if (!first) return { first: false, xp: 0 }
+        get().recordActivity('lab')
+        get().addXp(lab.xp, { en: 'Lab completed', fr: 'Lab terminé' })
+        if (lab.badge) get().unlockAchievement(lab.badge)
+        if (lab.noHintBadge && cur.hints === 0) get().unlockAchievement(lab.noHintBadge)
+        if (get().labs['lab-4']?.completedAt && get().labs['lab-5']?.completedAt) get().unlockAchievement('server-admin')
+        set((s) => {
+          const skills = { ...s.skills }
+          for (const k of lab.skills) skills[k] = Math.min(100, (skills[k] ?? 0) + 10)
+          return { skills }
+        })
+        return { first: true, xp: lab.xp }
+      },
+
       toggleBookmark: (id) =>
         set((s) => ({ bookmarks: s.bookmarks.includes(id) ? s.bookmarks.filter((b) => b !== id) : [...s.bookmarks, id] })),
     }),
     {
       name: STORAGE_KEYS.progress,
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localAdapter),
       // v1 → v2 adds lesson state, resume pointer and bookmarks.
-      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], assessments: {}, topicStats: {}, tagCounts: {}, certificates: {}, ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
+      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], assessments: {}, topicStats: {}, tagCounts: {}, certificates: {}, labs: {}, ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
     },
   ),
 )
@@ -356,6 +397,7 @@ function demoProfile(): ProgressData {
     topicStats: {},
     tagCounts: {},
     certificates: {},
+    labs: {},
   }
 }
 

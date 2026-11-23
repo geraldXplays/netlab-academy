@@ -22,6 +22,8 @@ const AssessmentsPage = lazy(() => import('@/pages/AssessmentsPage'))
 const ExamPage = lazy(() => import('@/pages/ExamPage'))
 const PracticePage = lazy(() => import('@/pages/PracticePage'))
 const CertificatePage = lazy(() => import('@/pages/CertificatePage'))
+const LabsPage = lazy(() => import('@/pages/LabsPage'))
+const LabPage = lazy(() => import('@/pages/LabPage'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const Loading = () => (
@@ -52,7 +54,8 @@ const router = createBrowserRouter([
       { path: '/assessments/:id', element: p(<ExamPage />) },
       { path: '/practice/:mode', element: p(<PracticePage />) },
       { path: '/certificate/:levelId', element: p(<CertificatePage />) },
-      { path: '/labs', element: s(<ComingSoon section="labs" />) },
+      { path: '/labs', element: p(<LabsPage />) },
+      { path: '/labs/:id', element: p(<LabPage />) },
       { path: '/simulator', element: s(<ComingSoon section="simulator" />) },
       { path: '/dictionary', element: s(<ComingSoon section="dictionary" />) },
       { path: '/design-system', element: s(<DesignSystem />) },

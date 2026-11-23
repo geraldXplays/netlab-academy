@@ -68,6 +68,23 @@ export function mergeProgress(a: Partial<ProgressData>, b: Partial<ProgressData>
     topicStats[k] = !cur || v.seen > cur.seen ? v : cur
   }
 
+  const labs: ProgressData['labs'] = { ...A.labs }
+  for (const [id, lb] of Object.entries(B.labs ?? {})) {
+    const cur = labs[id]
+    if (!cur) labs[id] = lb
+    else {
+      const newer = lb.updated > cur.updated ? lb : cur
+      labs[id] = {
+        ...newer,
+        best: Math.max(cur.best, lb.best),
+        completedAt: cur.completedAt && lb.completedAt ? (cur.completedAt < lb.completedAt ? cur.completedAt : lb.completedAt) : cur.completedAt ?? lb.completedAt,
+        hints: Math.max(cur.hints, lb.hints),
+        steps: [...new Set([...cur.steps, ...lb.steps])],
+        answers: { ...cur.answers, ...lb.answers },
+      }
+    }
+  }
+
   const streakA = A.streak
   const streakB = B.streak
   const streak = (streakB.last ?? '') > (streakA.last ?? '') ? { ...streakB, best: Math.max(streakA.best, streakB.best) } : { ...streakA, best: Math.max(streakA.best, streakB.best) }
@@ -91,6 +108,7 @@ export function mergeProgress(a: Partial<ProgressData>, b: Partial<ProgressData>
     topicStats,
     tagCounts: maxRec(A.tagCounts, B.tagCounts),
     certificates: { ...B.certificates, ...A.certificates },
+    labs,
   }
 }
 
