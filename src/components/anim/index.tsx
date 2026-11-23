@@ -4,6 +4,7 @@ import { useI18n } from '@/i18n'
 import { Player, type AnimSpec } from './Player'
 import { binaryAnd, ipv6Compress, osiEncap, subnetSplit, tcpHandshake, vlsm } from './net1'
 import { SubnetCalc } from './SubnetCalc'
+import { arpAnim, dynamicRouting, macLearning, routeLookup, routerOnStick, stpAnim, vlanTag } from './net2'
 
 export const ANIMS: Record<AnimKey, (fr: boolean) => AnimSpec> = {
   'osi-encap': osiEncap,
@@ -12,6 +13,13 @@ export const ANIMS: Record<AnimKey, (fr: boolean) => AnimSpec> = {
   'binary-and': binaryAnd,
   'subnet-split': subnetSplit,
   vlsm,
+  'mac-learning': macLearning,
+  arp: arpAnim,
+  'route-lookup': routeLookup,
+  'vlan-tag': vlanTag,
+  'router-on-stick': routerOnStick,
+  stp: stpAnim,
+  'dynamic-routing': dynamicRouting,
 }
 
 export const WIDGETS: Record<WidgetKey, ComponentType> = {

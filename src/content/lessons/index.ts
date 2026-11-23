@@ -9,6 +9,8 @@ import { ipLessons, macLessons, archLessons } from './l1/addressing'
 import { osiLessons } from './l2/osi'
 import { ipv46Lessons } from './l2/ip'
 import { subnetLessons } from './l2/subnet'
+import { switchLessons, routerLessons } from './l2/switching'
+import { vlanLessons, trunkLessons, routingLessons } from './l2/vlan'
 
 export * from './types'
 
@@ -16,6 +18,7 @@ const ALL: Lesson[] = [
   ...hardwareLessons, ...componentLessons, ...osLessons, ...fsLessons, ...cliLessons,
   ...netIntroLessons, ...ethernetLessons, ...ipLessons, ...macLessons, ...archLessons,
   ...osiLessons, ...ipv46Lessons, ...subnetLessons,
+  ...switchLessons, ...routerLessons, ...vlanLessons, ...trunkLessons, ...routingLessons,
 ]
 
 export const LESSONS: Record<string, Lesson> = Object.fromEntries(ALL.map((l) => [l.id, l]))
