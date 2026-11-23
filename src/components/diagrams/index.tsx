@@ -4,6 +4,7 @@ import { useI18n } from '@/i18n'
 import { Box, Label, Line, Packet, Svg } from './kit'
 import { MotherboardDiagram } from './Motherboard'
 import { Cpu3DDiagram } from './Cpu3D'
+import { CablesDiagram, RackDiagram, RamDiagram, StorageDiagram } from './hardware'
 import { Rj45Diagram } from './Rj45'
 import { HomeNetworkPT, LanWanPT, PacketJourneyPT, TopologiesPT } from './network'
 
@@ -198,6 +199,10 @@ export const DIAGRAMS: Record<DiagramKey, ComponentType> = {
   ipo: Ipo,
   motherboard: MotherboardDiagram,
   'cpu-3d': Cpu3DDiagram,
+  'ram-module': RamDiagram,
+  'storage-drives': StorageDiagram,
+  cables: CablesDiagram,
+  rack: RackDiagram,
   'memory-hierarchy': MemoryHierarchy,
   'os-layers': OsLayers,
   'boot-sequence': BootSequence,

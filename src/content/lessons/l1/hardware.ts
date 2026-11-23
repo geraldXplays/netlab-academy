@@ -177,6 +177,7 @@ export const componentLessons: Lesson[] = [
         ),
       },
       { type: 'diagram', diagram: 'memory-hierarchy', caption: t('The memory hierarchy: the closer to the CPU, the faster — and the smaller and more expensive.', 'La hiérarchie mémoire : plus c’est proche du CPU, plus c’est rapide — et petit et cher.') },
+      { type: 'diagram', diagram: 'ram-module', caption: t('A real DDR5 memory module and its laptop cousin, the SO-DIMM. Hover each part.', 'Une vraie barrette DDR5 et sa cousine pour portable, la SO-DIMM. Survolez chaque élément.') },
       {
         type: 'text',
         title: t('RAM vs storage', 'RAM vs stockage'),
@@ -254,6 +255,7 @@ export const componentLessons: Lesson[] = [
           ['NVMe SSD', t('Flash on the PCIe bus (M.2 slot)', 'Flash sur bus PCIe (slot M.2)'), '3,000–7,000 MB/s', t('OS drive, servers', 'Disque système, serveurs')],
         ],
       },
+      { type: 'diagram', diagram: 'storage-drives', caption: t('Three generations of storage: spinning disk, SATA SSD and NVMe — and how fast each one really is.', 'Trois générations de stockage : disque à plateaux, SSD SATA et NVMe — et leur vitesse réelle.') },
       {
         type: 'callout',
         tone: 'tip',

@@ -113,6 +113,7 @@ export const netIntroLessons: Lesson[] = [
           explain: t('Each device has its own link to the switch — failures are isolated.', 'Chaque appareil a son propre lien vers le commutateur — les pannes sont isolées.'),
         },
       },
+      { type: 'diagram', diagram: 'rack', caption: t('Inside the network room: a typical office rack, from the patch panel at the top to the UPS at the bottom.', 'Dans le local réseau : une baie de bureau typique, du panneau de brassage en haut à l’onduleur en bas.') },
       {
         type: 'callout',
         tone: 'pro',
@@ -170,6 +171,7 @@ export const ethernetLessons: Lesson[] = [
           [t('Single-mode fibre', 'Fibre monomode'), t('100 Gb/s+', '100 Gb/s+'), t('Kilometres', 'Kilomètres'), t('Between buildings, ISP links', 'Entre bâtiments, liens opérateurs')],
         ],
       },
+      { type: 'diagram', diagram: 'cables', caption: t('Copper twisted pair, RJ45 plug, fibre optic and coax — the cables you will handle every week.', 'Paire torsadée cuivre, prise RJ45, fibre optique et coaxial — les câbles que vous manipulerez chaque semaine.') },
       {
         type: 'callout',
         tone: 'warn',

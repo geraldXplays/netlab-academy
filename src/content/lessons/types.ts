@@ -24,6 +24,10 @@ export type DiagramKey =
   | 'home-network'
   | 'packet-journey'
   | 'cpu-3d'
+  | 'ram-module'
+  | 'storage-drives'
+  | 'cables'
+  | 'rack'
 
 /** Step-by-step animated examples (components/anim). */
 export type AnimKey = 'osi-encap' | 'tcp-handshake' | 'ipv6-compress' | 'binary-and' | 'subnet-split' | 'vlsm'
