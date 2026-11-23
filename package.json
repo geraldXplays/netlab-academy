@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && python3 scripts/deploy.py"
   },
   "dependencies": {
     "@fontsource-variable/cormorant-garamond": "^5.3.0",
