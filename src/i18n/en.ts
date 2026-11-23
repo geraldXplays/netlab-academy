@@ -6,6 +6,7 @@ export const en = {
     academy: 'Academy',
     labs: 'Labs',
     simulator: 'Simulator',
+    explorer: 'Explorer',
     dictionary: 'Dictionary',
     assessments: 'Assessments',
     designSystem: 'Design system',

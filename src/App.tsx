@@ -14,6 +14,7 @@ import { useAuth } from '@/store/auth'
 // Secondary routes are code-split.
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const DictionaryPage = lazy(() => import('@/pages/DictionaryPage'))
+const ExplorerPage = lazy(() => import('@/pages/ExplorerPage'))
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'))
 const AcademyPage = lazy(() => import('@/pages/AcademyPage'))
 const LessonPage = lazy(() => import('@/pages/LessonPage'))
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
       { path: '/labs/:id', element: p(<LabPage />) },
       { path: '/simulator', element: p(<OpsPage />) },
       { path: '/simulator/:id', element: p(<OpsPage />) },
+      { path: '/explorer', element: s(<ExplorerPage />) },
       { path: '/dictionary', element: s(<DictionaryPage />) },
       { path: '/design-system', element: s(<DesignSystem />) },
       { path: '*', element: s(<NotFound />) },

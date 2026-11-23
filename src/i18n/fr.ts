@@ -8,6 +8,7 @@ export const fr: Dict = {
     academy: 'Académie',
     labs: 'Labs',
     simulator: 'Simulateur',
+    explorer: 'Explorateur',
     dictionary: 'Dictionnaire',
     assessments: 'Évaluations',
     designSystem: 'Design system',
