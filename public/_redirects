@@ -1,1 +1,3 @@
+# Missing build files must 404 (not fall back to index.html), so stale tabs fail cleanly.
+/assets/*  /404.html  404
 /*    /index.html   200

@@ -7,6 +7,7 @@ import { useSettings } from '@/store/settings'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
 import { MotionConfig } from 'motion/react'
 import Landing from '@/pages/Landing'
+import RouteError from '@/pages/RouteError'
 import { RequireAuth } from '@/components/layout/RequireAuth'
 import { useAuth } from '@/store/auth'
 
@@ -42,6 +43,7 @@ const p = (el: React.ReactNode) => s(<RequireAuth>{el}</RequireAuth>)
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <Landing /> },
       { path: '/signin', element: s(<SignInPage />) },

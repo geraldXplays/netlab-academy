@@ -1,9 +1,24 @@
-import { Suspense } from 'react'
+import { Component, Suspense, type ReactNode } from 'react'
+import { isChunkError, reloadForNewVersion } from '@/pages/RouteError'
 import { useSettings } from '@/store/settings'
 import { identityById } from '@/themes/identities'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
 import { SCENES } from './scenes'
 import { cn } from '@/lib/cn'
+
+/** A decorative scene must never take the page down: on failure, render nothing (and pick up a new deploy). */
+class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch(error: unknown) {
+    if (isChunkError(error)) reloadForNewVersion()
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
 
 /**
  * The hero's animated world. Chooses the scene of the active identity and
@@ -26,9 +41,11 @@ export function HeroScene() {
           full ? 'inset-0' : 'inset-y-0 right-[-14%] w-[78%] max-md:inset-x-[-30%] max-md:right-auto max-md:w-auto max-md:opacity-50',
         )}
       >
-        <Suspense fallback={null}>
-          <Scene key={`${identity.id}-${theme}`} reduced={reduced} variant={identity.variant} theme={theme} className="h-full w-full" />
-        </Suspense>
+        <SceneBoundary key={`${identity.id}-${theme}`}>
+          <Suspense fallback={null}>
+            <Scene reduced={reduced} variant={identity.variant} theme={theme} className="h-full w-full" />
+          </Suspense>
+        </SceneBoundary>
       </div>
       {/* Readability veil: keeps the headline legible over full-bleed scenes */}
       {full && (
