@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 import { item } from '@/components/diagrams/kit'
 
 /**
- * Network device icons in the visual language of Cisco Packet Tracer:
- * shaded blue routers/switches with direction arrows, beige-blue PCs, dark
- * servers, and links with green/orange/red status lights at each end.
+ * Realistic network device icons (isometric hardware with ports and LEDs),
+ * each carrying a small Packet Tracer-style badge so it stays recognisable.
+ * Links keep the green/orange/red status lights at each end.
  * Each icon is drawn centred on (0,0) and roughly 64px wide at scale 1.
  */
 
@@ -15,56 +15,71 @@ export type DeviceKind = 'router' | 'switch' | 'pc' | 'laptop' | 'server' | 'clo
 export function DeviceDefs() {
   return (
     <defs>
-      <linearGradient id="pt-top" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#bfe0f2" />
-        <stop offset="1" stopColor="#6fa8cc" />
-      </linearGradient>
-      <linearGradient id="pt-side" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#2f78a3" />
-        <stop offset="1" stopColor="#174a6a" />
-      </linearGradient>
-      <linearGradient id="pt-screen" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#7cc4ff" />
-        <stop offset="1" stopColor="#1d5fa8" />
-      </linearGradient>
-      <linearGradient id="pt-case" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor="#e7ebf0" />
-        <stop offset="1" stopColor="#aab4c0" />
-      </linearGradient>
-      <linearGradient id="pt-server" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor="#4b5563" />
-        <stop offset="1" stopColor="#1f2937" />
-      </linearGradient>
-      <linearGradient id="pt-cloud" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#ffffff" />
-        <stop offset="1" stopColor="#b9d6ea" />
-      </linearGradient>
-      <linearGradient id="pt-brick" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#f0855a" />
-        <stop offset="1" stopColor="#b9452a" />
-      </linearGradient>
-      <filter id="pt-shadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="0" dy="3" stdDeviation="2.5" floodColor="#000" floodOpacity="0.35" />
+      <linearGradient id="dv-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#5b6676" /><stop offset="1" stopColor="#323a46" /></linearGradient>
+      <linearGradient id="dv-front" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2a313b" /><stop offset="1" stopColor="#151a21" /></linearGradient>
+      <linearGradient id="dv-side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#1c222b" /><stop offset="1" stopColor="#0e1217" /></linearGradient>
+      <linearGradient id="dv-blue-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4f8fd6" /><stop offset="1" stopColor="#1f5a9e" /></linearGradient>
+      <linearGradient id="dv-blue-front" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1e4f8a" /><stop offset="1" stopColor="#0f2d55" /></linearGradient>
+      <linearGradient id="dv-red-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#d9534f" /><stop offset="1" stopColor="#8f2522" /></linearGradient>
+      <linearGradient id="dv-red-front" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7a1f1c" /><stop offset="1" stopColor="#4a1210" /></linearGradient>
+      <linearGradient id="dv-alu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#f1f4f7" /><stop offset="0.5" stopColor="#c4cbd3" /><stop offset="1" stopColor="#8f99a4" /></linearGradient>
+      <linearGradient id="dv-bezel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2b3038" /><stop offset="1" stopColor="#0d1014" /></linearGradient>
+      <linearGradient id="dv-screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#38bdf8" /><stop offset="0.55" stopColor="#6366f1" /><stop offset="1" stopColor="#a855f7" /></linearGradient>
+      <linearGradient id="dv-white" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#d5dbe1" /></linearGradient>
+      <linearGradient id="dv-cloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#bcd3e6" /></linearGradient>
+      <filter id="pt-shadow" x="-30%" y="-30%" width="160%" height="170%">
+        <feDropShadow dx="0" dy="3.5" stdDeviation="2.5" floodColor="#000" floodOpacity="0.4" />
       </filter>
     </defs>
   )
 }
 
-const arrow = (x: number, y: number, rot: number, key: string) => (
-  <path key={key} d="M-5 -1.6 H2 V-4 L6 0 L2 4 V1.6 H-5 Z" fill="#fff" transform={`translate(${x} ${y}) rotate(${rot})`} />
+/** Isometric box: top face, front face, right side. (x,y) = front-top-left corner. */
+function Box({ x, y, w, h, d, top, front, side }: { x: number; y: number; w: number; h: number; d: number; top: string; front: string; side: string }) {
+  const dx = d * 0.55
+  const dy = d * 0.45
+  return (
+    <g>
+      <path d={`M${x} ${y} L${x + dx} ${y - dy} H${x + w + dx} L${x + w} ${y} Z`} fill={top} stroke="#0b0e12" strokeWidth="0.5" />
+      <rect x={x} y={y} width={w} height={h} fill={front} stroke="#0b0e12" strokeWidth="0.5" />
+      <path d={`M${x + w} ${y} L${x + w + dx} ${y - dy} V${y - dy + h} L${x + w} ${y + h} Z`} fill={side} stroke="#0b0e12" strokeWidth="0.5" />
+    </g>
+  )
+}
+
+const led = (x: number, y: number, c: string, k: string | number) => <rect key={k} x={x} y={y} width="1.8" height="1.2" rx="0.3" fill={c} />
+const port = (x: number, y: number, k: string | number, on = true) => (
+  <g key={k}>
+    <rect x={x} y={y} width="3.6" height="3" rx="0.4" fill="#05070a" stroke="#5c6672" strokeWidth="0.3" />
+    {on && led(x + 0.9, y - 1.6, '#22c55e', `l${k}`)}
+  </g>
 )
+
+/** Small round badge with the classic symbol so devices stay recognisable at a glance. */
+function Badge({ x, y, kind }: { x: number; y: number; kind: 'router' | 'switch' | 'firewall' }) {
+  const c = kind === 'firewall' ? '#ef4444' : '#38bdf8'
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <ellipse rx="7.5" ry="4" fill="#0b1220" stroke={c} strokeWidth="0.8" />
+      {kind === 'router' && <path d="M-4 -1 H2 M0 -2.6 L2 -1 L0 0.6 M4 1 H-2 M0 -0.6 L-2 1 L0 2.6" stroke={c} strokeWidth="0.9" fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+      {kind === 'switch' && <path d="M-4.5 -1.2 H4 M2 -2.6 L4 -1.2 L2 0.2 M4.5 1.4 H-4 M-2 0 L-4 1.4 L-2 2.8" stroke={c} strokeWidth="0.9" fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+      {kind === 'firewall' && <path d="M-4 -2 H4 V2 H-4 Z M-4 0 H4 M-1.5 -2 V0 M1.5 0 V2" stroke={c} strokeWidth="0.8" fill="none" />}
+    </g>
+  )
+}
 
 function Router() {
   return (
     <g filter="url(#pt-shadow)">
-      <path d="M-30 -6 V8 A30 10 0 0 0 30 8 V-6 Z" fill="url(#pt-side)" />
-      <ellipse cx="0" cy="-6" rx="30" ry="10" fill="url(#pt-top)" stroke="#1d5b80" strokeWidth="0.8" />
-      {/* four arrows: two in, two out */}
-      {arrow(-11, -9, 25, 'a')}
-      {arrow(11, -3, 205, 'b')}
-      {arrow(11, -9, -25, 'c')}
-      {arrow(-11, -3, 155, 'd')}
-      <path d="M-30 8 A30 10 0 0 0 30 8" fill="none" stroke="#0e3550" strokeWidth="0.8" />
+      {/* antennas */}
+      <path d="M-20 -6 L-24 -26" stroke="#1f2937" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M22 -10 L27 -28" stroke="#1f2937" strokeWidth="2.4" strokeLinecap="round" />
+      <Box x={-28} y={-4} w={50} h={12} d={16} top="url(#dv-blue-top)" front="url(#dv-blue-front)" side="#0b2342" />
+      {[0, 1, 2, 3].map((i) => port(-24 + i * 6, 2, i, i < 3))}
+      {led(4, 3, '#22c55e', 'p')}
+      {led(8, 3, '#f59e0b', 'a')}
+      <rect x="12" y="1.5" width="7" height="4.5" rx="0.5" fill="#0a1a2e" stroke="#3b82f6" strokeWidth="0.3" />
+      <Badge x={-2} y={-8} kind="router" />
     </g>
   )
 }
@@ -72,16 +87,10 @@ function Router() {
 function Switch() {
   return (
     <g filter="url(#pt-shadow)">
-      <path d="M-34 -4 L-22 -14 H34 L22 -4 Z" fill="url(#pt-top)" stroke="#1d5b80" strokeWidth="0.8" />
-      <path d="M-34 -4 H22 V8 H-34 Z" fill="url(#pt-side)" />
-      <path d="M22 -4 L34 -14 V-2 L22 8 Z" fill="#164462" />
-      {arrow(-8, -11, 180, 'a')}
-      {arrow(6, -11, 0, 'b')}
-      {arrow(-12, -7, 180, 'c')}
-      {arrow(2, -7, 0, 'd')}
-      {Array.from({ length: 8 }, (_, i) => (
-        <rect key={i} x={-30 + i * 6.5} y="0" width="4" height="3" rx="0.6" fill="#0b2a3e" />
-      ))}
+      <Box x={-32} y={-4} w={58} h={10} d={14} top="url(#dv-top)" front="url(#dv-front)" side="url(#dv-side)" />
+      {Array.from({ length: 12 }, (_, i) => port(-29 + i * 4.3 + (i > 5 ? 1.5 : 0), 1.5, i, i % 5 !== 3))}
+      <rect x="22" y="1" width="3" height="3.5" fill="#0ea5e9" opacity="0.8" />
+      <Badge x={-3} y={-7.5} kind="switch" />
     </g>
   )
 }
@@ -89,14 +98,21 @@ function Switch() {
 function Pc() {
   return (
     <g filter="url(#pt-shadow)">
-      <rect x="-22" y="-26" width="44" height="32" rx="3" fill="url(#pt-case)" stroke="#7b8794" strokeWidth="0.8" />
-      <rect x="-18" y="-22" width="36" height="24" rx="1.5" fill="url(#pt-screen)" />
-      <path d="M-14 -20 L4 -20 L-14 -6 Z" fill="#fff" opacity="0.18" />
-      <rect x="-5" y="6" width="10" height="5" fill="#9aa5b1" />
-      <path d="M-26 14 H26 L22 20 H-22 Z" fill="url(#pt-case)" stroke="#7b8794" strokeWidth="0.8" />
-      {Array.from({ length: 6 }, (_, i) => (
-        <rect key={i} x={-19 + i * 6.5} y="15.6" width="5" height="1.6" rx="0.4" fill="#8592a0" />
-      ))}
+      {/* monitor */}
+      <rect x="-24" y="-28" width="48" height="31" rx="2.5" fill="url(#dv-bezel)" />
+      <rect x="-22" y="-26" width="44" height="26" rx="1" fill="url(#dv-screen)" />
+      <path d="M-22 -26 L2 -26 L-22 -6 Z" fill="#fff" opacity="0.12" />
+      {/* taskbar + windows on screen */}
+      <rect x="-22" y="-3" width="44" height="3" fill="#0b1220" opacity="0.7" />
+      <rect x="-17" y="-21" width="18" height="12" rx="0.8" fill="#f8fafc" opacity="0.85" />
+      <rect x="-17" y="-21" width="18" height="2.2" rx="0.8" fill="#334155" />
+      {/* stand */}
+      <path d="M-3 3 H3 L4.5 10 H-4.5 Z" fill="url(#dv-alu)" />
+      <ellipse cx="0" cy="11" rx="11" ry="2.4" fill="url(#dv-alu)" />
+      {/* keyboard */}
+      <path d="M-22 15 H20 L25 20 H-17 Z" fill="url(#dv-alu)" stroke="#6b7480" strokeWidth="0.4" />
+      {Array.from({ length: 10 }, (_, i) => <rect key={i} x={-17 + i * 3.8 + 1} y="16.2" width="2.8" height="1.2" rx="0.3" fill="#7b848f" />)}
+      {Array.from({ length: 9 }, (_, i) => <rect key={`b${i}`} x={-15 + i * 3.8 + 2} y="18" width="2.8" height="1.2" rx="0.3" fill="#7b848f" />)}
     </g>
   )
 }
@@ -104,10 +120,13 @@ function Pc() {
 function Laptop() {
   return (
     <g filter="url(#pt-shadow)">
-      <rect x="-22" y="-22" width="44" height="28" rx="3" fill="#cfd6de" stroke="#7b8794" strokeWidth="0.8" />
-      <rect x="-19" y="-19" width="38" height="22" rx="1.5" fill="url(#pt-screen)" />
-      <path d="M-28 8 H28 L24 14 H-24 Z" fill="url(#pt-case)" stroke="#7b8794" strokeWidth="0.8" />
-      <rect x="-6" y="9.5" width="12" height="2" rx="1" fill="#8592a0" />
+      <path d="M-22 -24 H22 L22 6 H-22 Z" fill="url(#dv-bezel)" />
+      <rect x="-20" y="-22" width="40" height="25" rx="1" fill="url(#dv-screen)" />
+      <path d="M-20 -22 L4 -22 L-20 -2 Z" fill="#fff" opacity="0.12" />
+      <rect x="-15" y="-17" width="16" height="11" rx="0.8" fill="#f8fafc" opacity="0.85" />
+      <path d="M-26 6 H26 L30 14 H-30 Z" fill="url(#dv-alu)" stroke="#6b7480" strokeWidth="0.4" />
+      {Array.from({ length: 11 }, (_, i) => <rect key={i} x={-22 + i * 4 + 0.5} y="7.6" width="3" height="1.1" rx="0.3" fill="#8f99a4" />)}
+      <rect x="-6" y="10.5" width="12" height="2.4" rx="0.8" fill="#aab3bd" />
     </g>
   )
 }
@@ -115,14 +134,15 @@ function Laptop() {
 function Server() {
   return (
     <g filter="url(#pt-shadow)">
-      <rect x="-16" y="-30" width="32" height="56" rx="3" fill="url(#pt-server)" stroke="#111827" strokeWidth="0.8" />
-      {[0, 1, 2, 3].map((i) => (
+      <Box x={-16} y={-24} w={28} h={50} d={16} top="url(#dv-top)" front="url(#dv-front)" side="url(#dv-side)" />
+      {[0, 1, 2, 3, 4].map((i) => (
         <g key={i}>
-          <rect x="-12" y={-26 + i * 12} width="24" height="9" rx="1.2" fill="#374151" stroke="#4b5563" strokeWidth="0.6" />
-          <circle cx="8" cy={-21.5 + i * 12} r="1.4" fill={i === 1 ? '#f59e0b' : '#22c55e'} />
-          <rect x="-9" y={-22.5 + i * 12} width="12" height="1.6" rx="0.6" fill="#6b7280" />
+          <rect x="-13" y={-21 + i * 8.6} width="22" height="7" rx="0.8" fill="#0b0e12" stroke="#3a4350" strokeWidth="0.4" />
+          {[0, 1, 2].map((k) => <path key={k} d={`M-11 ${-19 + i * 8.6 + k * 1.8} H3`} stroke="#2a313b" strokeWidth="0.7" />)}
+          <circle cx="6" cy={-17.5 + i * 8.6} r="0.9" fill={i === 2 ? '#f59e0b' : '#22c55e'} />
         </g>
       ))}
+      <circle cx="-1" cy="22" r="1.6" fill="#38bdf8" />
     </g>
   )
 }
@@ -130,12 +150,9 @@ function Server() {
 function Cloud() {
   return (
     <g filter="url(#pt-shadow)">
-      <path
-        d="M-30 10 A12 12 0 0 1 -26 -10 A15 15 0 0 1 -2 -20 A16 16 0 0 1 24 -12 A12 12 0 0 1 32 10 Z"
-        fill="url(#pt-cloud)"
-        stroke="#7aa7c7"
-        strokeWidth="1"
-      />
+      <path d="M-30 10 A12 12 0 0 1 -26 -10 A15 15 0 0 1 -2 -20 A16 16 0 0 1 24 -12 A12 12 0 0 1 32 10 Z" fill="url(#dv-cloud)" stroke="#8fb3cf" strokeWidth="1" />
+      <path d="M-14 2 H14 M-10 -4 H10 M0 -10 V8" stroke="#7aa7c7" strokeWidth="1" opacity="0.7" />
+      <circle cx="0" cy="-1" r="7" fill="none" stroke="#5f8fb4" strokeWidth="1" />
     </g>
   )
 }
@@ -143,11 +160,14 @@ function Cloud() {
 function Printer() {
   return (
     <g filter="url(#pt-shadow)">
-      <rect x="-14" y="-24" width="28" height="12" fill="#fff" stroke="#9aa5b1" strokeWidth="0.8" />
-      <rect x="-24" y="-14" width="48" height="22" rx="3" fill="url(#pt-case)" stroke="#7b8794" strokeWidth="0.8" />
-      <rect x="-14" y="4" width="28" height="12" fill="#fff" stroke="#9aa5b1" strokeWidth="0.8" />
-      <circle cx="16" cy="-6" r="1.8" fill="#22c55e" />
-      <rect x="-18" y="-8" width="20" height="3" rx="1" fill="#8592a0" />
+      <path d="M-12 -14 L-8 -26 H10 L14 -14 Z" fill="#fff" stroke="#cbd5e1" strokeWidth="0.5" />
+      {[0, 1, 2].map((i) => <path key={i} d={`M${-7 + i} ${-23 + i * 3} H${8 - i}`} stroke="#94a3b8" strokeWidth="0.6" />)}
+      <Box x={-24} y={-12} w={44} h={20} d={12} top="url(#dv-white)" front="#e5e9ee" side="#b7c0ca" />
+      <rect x="-21" y="-8" width="16" height="6" rx="1" fill="#0b1220" />
+      <rect x="-20" y="-7" width="10" height="4" rx="0.5" fill="#22d3ee" opacity="0.7" />
+      <circle cx="16" cy="-5" r="1.4" fill="#22c55e" />
+      <rect x="-14" y="4" width="28" height="3" rx="1" fill="#475569" />
+      <path d="M-12 7 H12 L10 13 H-10 Z" fill="#fff" stroke="#cbd5e1" strokeWidth="0.5" />
     </g>
   )
 }
@@ -155,11 +175,12 @@ function Printer() {
 function Ap() {
   return (
     <g filter="url(#pt-shadow)">
-      <ellipse cx="0" cy="8" rx="22" ry="7" fill="url(#pt-side)" />
-      <ellipse cx="0" cy="4" rx="22" ry="7" fill="url(#pt-top)" stroke="#1d5b80" strokeWidth="0.8" />
-      {[8, 14, 20].map((r) => (
-        <path key={r} d={`M${-r * 0.7} ${-r * 0.4 - 2} A${r} ${r} 0 0 1 ${r * 0.7} ${-r * 0.4 - 2}`} fill="none" stroke="#2f78a3" strokeWidth="2" strokeLinecap="round" />
+      {[10, 16, 22].map((r) => (
+        <path key={r} d={`M${-r * 0.75} ${-r * 0.35 - 4} A${r} ${r} 0 0 1 ${r * 0.75} ${-r * 0.35 - 4}`} fill="none" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round" opacity={1 - r / 40} />
       ))}
+      <ellipse cx="0" cy="8" rx="22" ry="7.5" fill="#b7c0ca" />
+      <ellipse cx="0" cy="5" rx="22" ry="7.5" fill="url(#dv-white)" stroke="#cbd5e1" strokeWidth="0.6" />
+      <circle cx="0" cy="5" r="1.8" fill="#22c55e" />
     </g>
   )
 }
@@ -167,15 +188,11 @@ function Ap() {
 function Firewall() {
   return (
     <g filter="url(#pt-shadow)">
-      <rect x="-26" y="-18" width="52" height="34" rx="2" fill="url(#pt-brick)" stroke="#7c2d12" strokeWidth="0.8" />
-      {[-9, 0, 9].map((y) => (
-        <path key={y} d={`M-26 ${y} H26`} stroke="#fde2d4" strokeWidth="1" opacity="0.8" />
-      ))}
-      {[-18, -9, 0, 9].map((y, r) =>
-        [-13, 0, 13].map((x) => (
-          <path key={`${x}${y}`} d={`M${x + (r % 2 ? 6 : 0)} ${y} V${y + 9}`} stroke="#fde2d4" strokeWidth="1" opacity="0.8" />
-        )),
-      )}
+      <Box x={-28} y={-4} w={52} h={13} d={15} top="url(#dv-red-top)" front="url(#dv-red-front)" side="#3a0e0c" />
+      {[0, 1, 2, 3].map((i) => port(-24 + i * 6, 2.5, i))}
+      <rect x="4" y="1.5" width="16" height="5" rx="0.6" fill="#1a0606" />
+      <text x="12" y="5.4" textAnchor="middle" fontSize="3.2" fill="#fca5a5" fontWeight="700" style={{ fontFamily: "'JetBrains Mono Variable', monospace" }}>FW</text>
+      <Badge x={-2} y={-8} kind="firewall" />
     </g>
   )
 }
@@ -183,11 +200,9 @@ function Firewall() {
 function Modem() {
   return (
     <g filter="url(#pt-shadow)">
-      <rect x="-24" y="-10" width="48" height="18" rx="4" fill="url(#pt-case)" stroke="#7b8794" strokeWidth="0.8" />
-      {[0, 1, 2, 3].map((i) => (
-        <circle key={i} cx={-14 + i * 8} cy="-1" r="1.8" fill={i < 3 ? '#22c55e' : '#f59e0b'} />
-      ))}
-      <path d="M14 -10 V-24" stroke="#7b8794" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 -8 V-22" stroke="#334155" strokeWidth="2.2" strokeLinecap="round" />
+      <Box x={-24} y={-6} w={44} h={12} d={14} top="url(#dv-white)" front="#e5e9ee" side="#b7c0ca" />
+      {[0, 1, 2, 3].map((i) => <circle key={i} cx={-18 + i * 6} cy="0" r="1.3" fill={i < 3 ? '#22c55e' : '#f59e0b'} />)}
     </g>
   )
 }
