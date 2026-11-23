@@ -60,6 +60,8 @@ export interface IncidentResult {
 
 export interface LabState {
   topology?: Topology
+  /** server labs: saved virtual machine state */
+  vm?: unknown
   best: number
   completedAt?: string
   hints: number

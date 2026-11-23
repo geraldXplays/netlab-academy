@@ -3,6 +3,8 @@ import { t, type ExamQuestion } from './lessons/types'
 import type { DeviceType, SimDevice, SimLink, Topology } from '@/sim/types'
 import { createDevice } from '@/sim/topology'
 import { canPing } from '@/sim/engine'
+import type { WinState } from '@/servers/windows'
+import { linuxChecks } from '@/servers/linux'
 
 export interface LabTask {
   id: string
@@ -25,7 +27,10 @@ export interface LabDef {
   levelId: string
   difficulty: 1 | 2 | 3
   minutes: number
-  kind: 'sim' | 'guided'
+  kind: 'sim' | 'guided' | 'server'
+  /** Server labs: which simulated VM, and live-graded tasks on its state. */
+  vm?: 'windows' | 'linux'
+  vmTasks?: { id: string; label: L; points: number; check: (s: never) => boolean }[]
   scenario: L
   objectives: L[]
   equipment: L[]
@@ -244,20 +249,20 @@ export const LABS: LabDef[] = [
 
   /* ------------------------------ Lab 4 (guided) ------------------------------ */
   {
-    id: 'lab-4', number: 4, levelId: 'sysadmin', difficulty: 2, minutes: 90, kind: 'guided', xp: 250, skills: ['systems', 'security'],
+    id: 'lab-4', number: 4, levelId: 'sysadmin', difficulty: 2, minutes: 60, kind: 'server', vm: 'windows', xp: 250, skills: ['systems', 'security'],
     title: t('Deploy Windows Server and Active Directory', 'Déployez Windows Server et Active Directory'),
     scenario: t(
-      'The company is growing to 25 employees and wants central logins. You will install Windows Server in a virtual machine, promote it to a domain controller for **netlab.local**, and create users, groups and a shared folder with correct permissions.',
-      'L’entreprise passe à 25 employés et veut des connexions centralisées. Vous allez installer Windows Server dans une machine virtuelle, le promouvoir contrôleur de domaine pour **netlab.local**, et créer utilisateurs, groupes et un dossier partagé avec les bonnes permissions.',
+      'The company is growing to 25 employees and wants central logins. A fresh Windows Server 2022 virtual machine is running in your browser — no VirtualBox needed. Rename it, give it a static IP, promote it to a domain controller for **netlab.local**, then create users, groups and a shared folder with correct permissions.',
+      'L’entreprise passe à 25 employés et veut des connexions centralisées. Une machine virtuelle Windows Server 2022 neuve tourne dans votre navigateur — sans VirtualBox. Renommez-la, donnez-lui une IP statique, promouvez-la contrôleur de domaine pour **netlab.local**, puis créez utilisateurs, groupes et un dossier partagé avec les bonnes permissions.',
     ),
     objectives: [
-      t('Install Windows Server in VirtualBox with a static IP', 'Installer Windows Server dans VirtualBox avec une IP statique'),
+      t('Prepare a server: name and static IP', 'Préparer un serveur : nom et IP statique'),
       t('Install AD DS and promote a domain controller', 'Installer AD DS et promouvoir un contrôleur de domaine'),
       t('Create users, groups and NTFS/share permissions', 'Créer utilisateurs, groupes et permissions NTFS/partage'),
     ],
-    equipment: [t('VirtualBox (free) on a PC with 8 GB RAM', 'VirtualBox (gratuit) sur un PC avec 8 Go de RAM'), t('Windows Server 2022 evaluation ISO (free, 180 days)', 'ISO d’évaluation Windows Server 2022 (gratuit, 180 jours)'), t('Optional: a Windows 10/11 VM to join the domain', 'Optionnel : une VM Windows 10/11 à joindre au domaine')],
+    equipment: [t('Simulated Windows Server 2022 VM (in your browser)', 'VM Windows Server 2022 simulée (dans votre navigateur)'), t('Optional, for real practice later: VirtualBox/UTM + evaluation ISO', 'Optionnel, pour pratiquer en vrai plus tard : VirtualBox/UTM + ISO d’évaluation')],
     steps: [
-      { title: t('Create the VM', 'Créez la VM'), body: t('VirtualBox → New: 2 vCPU, 4 GB RAM, 60 GB disk, attach the ISO. Network: **Internal Network** named `netlab` (an isolated lab LAN). Install "Windows Server 2022 Standard (Desktop Experience)".', 'VirtualBox → Nouvelle : 2 vCPU, 4 Go RAM, disque 60 Go, ISO attaché. Réseau : **Réseau interne** nommé `netlab` (un LAN de lab isolé). Installez « Windows Server 2022 Standard (Expérience de bureau) ».') },
+      { title: t('Meet your VM', 'Découvrez votre VM'), body: t('The VM on the right has just finished installing. Look around: `hostname`, `ipconfig`, `Get-WindowsFeature`. Notice the random name and the DHCP address — neither is acceptable for a domain controller.', 'La VM à droite vient de finir son installation. Explorez : `hostname`, `ipconfig`, `Get-WindowsFeature`. Notez le nom aléatoire et l’adresse DHCP — ni l’un ni l’autre n’est acceptable pour un contrôleur de domaine.'), code: 'hostname\nipconfig\nGet-WindowsFeature' },
       { title: t('Rename and set a static IP', 'Renommez et fixez l’IP'), body: t('A domain controller must never change address. In PowerShell (admin):', 'Un contrôleur de domaine ne doit jamais changer d’adresse. En PowerShell (admin) :'), code: 'Rename-Computer -NewName DC01 -Restart\n# after reboot:\nNew-NetIPAddress -InterfaceAlias "Ethernet" -IPAddress 10.0.0.10 -PrefixLength 24 -DefaultGateway 10.0.0.1\nSet-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses 127.0.0.1' },
       { title: t('Install AD DS', 'Installez AD DS'), body: t('Add the Active Directory Domain Services role:', 'Ajoutez le rôle Services de domaine Active Directory :'), code: 'Install-WindowsFeature AD-Domain-Services -IncludeManagementTools' },
       { title: t('Promote to domain controller', 'Promouvez en contrôleur de domaine'), body: t('Create a new forest. The server reboots and DNS is installed automatically.', 'Créez une nouvelle forêt. Le serveur redémarre et le DNS s’installe automatiquement.'), code: 'Install-ADDSForest -DomainName "netlab.local" -DomainNetbiosName "NETLAB" -InstallDns', hint: t('You will be asked for a DSRM (recovery) password — write it down.', 'Un mot de passe DSRM (restauration) est demandé — notez-le.') },
@@ -276,31 +281,43 @@ export const LABS: LabDef[] = [
       { symptom: t('Install-ADDSForest fails on the DNS check', 'Install-ADDSForest échoue sur le contrôle DNS'), fix: t('Set a static IP and point DNS to 127.0.0.1 before promoting.', 'Fixez une IP statique et le DNS sur 127.0.0.1 avant la promotion.') },
       { symptom: t('User cannot write to the share', 'L’utilisateur ne peut pas écrire dans le partage'), fix: t('Effective access = the most restrictive of share and NTFS permissions. Check both.', 'Accès effectif = le plus restrictif entre partage et NTFS. Vérifiez les deux.') },
     ],
+    vmTasks: [
+      { id: 'name', points: 1, label: t('Server renamed to DC01', 'Serveur renommé DC01'), check: ((s: WinState) => s.hostname.toUpperCase() === 'DC01') as (s: never) => boolean },
+      { id: 'ip', points: 2, label: t('Static IP 10.0.0.10/24, gateway 10.0.0.1', 'IP statique 10.0.0.10/24, passerelle 10.0.0.1'), check: ((s: WinState) => !s.dhcp && s.ip === '10.0.0.10' && s.prefix === 24 && s.gateway === '10.0.0.1') as (s: never) => boolean },
+      { id: 'role', points: 1, label: t('AD DS role installed', 'Rôle AD DS installé'), check: ((s: WinState) => s.features.includes('AD-Domain-Services')) as (s: never) => boolean },
+      { id: 'forest', points: 2, label: t('Domain netlab.local created (NETLAB)', 'Domaine netlab.local créé (NETLAB)'), check: ((s: WinState) => s.domain === 'netlab.local' && s.netbios === 'NETLAB') as (s: never) => boolean },
+      { id: 'ou', points: 1, label: t('OU "Staff" exists', 'L’OU « Staff » existe'), check: ((s: WinState) => s.ous.some((o) => o.toLowerCase() === 'staff')) as (s: never) => boolean },
+      { id: 'group', points: 1, label: t('Group GG-Accounting in OU Staff', 'Groupe GG-Accounting dans l’OU Staff'), check: ((s: WinState) => s.groups['GG-Accounting']?.ou.toLowerCase() === 'staff') as (s: never) => boolean },
+      { id: 'user', points: 1, label: t('User adiallo enabled in OU Staff', 'Utilisateur adiallo activé dans l’OU Staff'), check: ((s: WinState) => !!s.users.adiallo?.enabled && s.users.adiallo.ou.toLowerCase() === 'staff') as (s: never) => boolean },
+      { id: 'member', points: 1, label: t('adiallo is a member of GG-Accounting', 'adiallo est membre de GG-Accounting'), check: ((s: WinState) => !!s.groups['GG-Accounting']?.members.includes('adiallo')) as (s: never) => boolean },
+      { id: 'share', points: 2, label: t('Share "Accounting" grants Change to the GROUP (not a user)', 'Le partage « Accounting » accorde Change au GROUPE (pas à un utilisateur)'), check: ((s: WinState) => !!s.shares.Accounting?.access.some((a) => a.who === 'NETLAB\\GG-Accounting' && (a.right === 'Change' || a.right === 'Full')) && !s.shares.Accounting.access.some((a) => a.who === 'NETLAB\\adiallo')) as (s: never) => boolean },
+      { id: 'ntfs', points: 2, label: t('NTFS Modify (inherited) for GG-Accounting', 'NTFS Modification (héritée) pour GG-Accounting'), check: ((s: WinState) => !!s.ntfs['c:\\shares\\accounting']?.some((x) => x.who === 'NETLAB\\GG-Accounting' && x.right === '(OI)(CI)M')) as (s: never) => boolean },
+    ],
     expected: t('`Get-ADDomain` returns netlab.local; the user exists in OU=Staff; the Accounting share is reachable as \\\\DC01\\Accounting by group members only.', '`Get-ADDomain` renvoie netlab.local ; l’utilisateur existe dans OU=Staff ; le partage Accounting est accessible en \\\\DC01\\Accounting par les membres du groupe uniquement.'),
     evaluation: [t('All steps completed (5 pts)', 'Toutes les étapes réalisées (5 pts)'), t('Checkpoint questions ≥ 80 % (5 pts)', 'Questions de contrôle ≥ 80 % (5 pts)')],
   },
 
   /* ------------------------------ Lab 5 (guided) ------------------------------ */
   {
-    id: 'lab-5', number: 5, levelId: 'sysadmin', difficulty: 2, minutes: 75, kind: 'guided', xp: 250, skills: ['systems', 'security'],
+    id: 'lab-5', number: 5, levelId: 'sysadmin', difficulty: 2, minutes: 50, kind: 'server', vm: 'linux', xp: 250, skills: ['systems', 'security'],
     title: t('Deploy an Ubuntu Linux server', 'Déployez un serveur Linux Ubuntu'),
     scenario: t(
-      'The development team needs a Linux server for internal tools. Install Ubuntu Server, give it a static address, create admin accounts, secure SSH and run a web service.',
-      'L’équipe de développement a besoin d’un serveur Linux pour des outils internes. Installez Ubuntu Server, donnez-lui une adresse statique, créez des comptes admin, sécurisez SSH et faites tourner un service web.',
+      'The development team needs a Linux server for internal tools. A fresh Ubuntu Server 24.04 VM is running in your browser, plus a terminal on your own laptop to test it remotely. Give it a static address, create an admin account, secure SSH with keys, enable the firewall and publish a web service.',
+      'L’équipe de développement a besoin d’un serveur Linux pour des outils internes. Une VM Ubuntu Server 24.04 neuve tourne dans votre navigateur, avec un terminal sur votre propre portable pour la tester à distance. Donnez-lui une adresse statique, créez un compte admin, sécurisez SSH par clés, activez le pare-feu et publiez un service web.',
     ),
     objectives: [
-      t('Install Ubuntu Server and configure netplan', 'Installer Ubuntu Server et configurer netplan'),
+      t('Configure a static IP with netplan', 'Configurer une IP statique avec netplan'),
       t('Manage users, sudo and SSH keys', 'Gérer utilisateurs, sudo et clés SSH'),
       t('Install, enable and verify a systemd service', 'Installer, activer et vérifier un service systemd'),
     ],
-    equipment: [t('VirtualBox, 2 GB RAM, 20 GB disk', 'VirtualBox, 2 Go de RAM, disque 20 Go'), t('Ubuntu Server 24.04 LTS ISO (free)', 'ISO Ubuntu Server 24.04 LTS (gratuit)')],
+    equipment: [t('Simulated Ubuntu Server 24.04 VM (in your browser)', 'VM Ubuntu Server 24.04 simulée (dans votre navigateur)'), t('Your laptop’s terminal (simulated) to test SSH and HTTP', 'Le terminal de votre portable (simulé) pour tester SSH et HTTP')],
     steps: [
-      { title: t('Install Ubuntu Server', 'Installez Ubuntu Server'), body: t('Create the VM (Bridged or Internal network). In the installer tick **Install OpenSSH server**. Create your first user `sysadmin`.', 'Créez la VM (réseau Pont ou Interne). Dans l’installeur, cochez **Install OpenSSH server**. Créez le premier utilisateur `sysadmin`.') },
+      { title: t('Meet your server', 'Découvrez votre serveur'), body: t('Ubuntu Server is installed with OpenSSH and your first user `sysadmin`. Check its address and services: `ip a`, `systemctl status ssh`. In the editor, Ctrl+S saves.', 'Ubuntu Server est installé avec OpenSSH et votre premier utilisateur `sysadmin`. Vérifiez son adresse et ses services : `ip a`, `systemctl status ssh`. Dans l’éditeur, Ctrl+S enregistre.'), code: 'ip a\nsystemctl status ssh\ncat /etc/netplan/50-cloud-init.yaml' },
       { title: t('Static IP with netplan', 'IP statique avec netplan'), body: t('Edit `/etc/netplan/50-cloud-init.yaml` (back it up first!):', 'Modifiez `/etc/netplan/50-cloud-init.yaml` (sauvegardez-le d’abord !) :'), code: 'network:\n  version: 2\n  ethernets:\n    enp0s3:\n      addresses: [10.0.0.20/24]\n      routes:\n        - to: default\n          via: 10.0.0.1\n      nameservers:\n        addresses: [10.0.0.10]\n\n# then\nsudo netplan apply\nip a' },
       { title: t('Users and sudo', 'Utilisateurs et sudo'), body: t('Create a second admin and give sudo rights:', 'Créez un second admin et donnez-lui sudo :'), code: 'sudo adduser amina\nsudo usermod -aG sudo amina\nid amina' },
-      { title: t('Secure SSH with keys', 'Sécurisez SSH avec des clés'), body: t('From your own PC, create a key and copy it, then disable password and root login:', 'Depuis votre PC, créez une clé et copiez-la, puis désactivez la connexion par mot de passe et root :'), code: 'ssh-keygen -t ed25519\nssh-copy-id sysadmin@10.0.0.20\n\n# on the server:\nsudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak\nsudo nano /etc/ssh/sshd_config   # PasswordAuthentication no, PermitRootLogin no\nsudo systemctl restart ssh', hint: t('Test the key login in a SECOND terminal before closing the first one — or you can lock yourself out.', 'Testez la connexion par clé dans un SECOND terminal avant de fermer le premier — sinon vous pouvez vous bloquer.') },
+      { title: t('Secure SSH with keys', 'Sécurisez SSH avec des clés'), body: t('In the **YOUR LAPTOP** tab, create a key and copy it to the server. Then, on the server, back up and edit the SSH config (PasswordAuthentication no, PermitRootLogin no) and restart ssh.', 'Dans l’onglet **VOTRE PORTABLE**, créez une clé et copiez-la sur le serveur. Puis, sur le serveur, sauvegardez et modifiez la config SSH (PasswordAuthentication no, PermitRootLogin no) et redémarrez ssh.'), code: '# laptop\nssh-keygen -t ed25519\nssh-copy-id sysadmin@10.0.0.20\nssh sysadmin@10.0.0.20\n\n# server\nsudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak\nsudo nano /etc/ssh/sshd_config   # PasswordAuthentication no, PermitRootLogin no\nsudo systemctl restart ssh', hint: t('Test the key login in a SECOND terminal before closing the first one — or you can lock yourself out.', 'Testez la connexion par clé dans un SECOND terminal avant de fermer le premier — sinon vous pouvez vous bloquer.') },
       { title: t('Firewall', 'Pare-feu'), body: t('Allow only SSH and HTTP:', 'N’autorisez que SSH et HTTP :'), code: 'sudo ufw allow OpenSSH\nsudo ufw allow 80/tcp\nsudo ufw enable\nsudo ufw status' },
-      { title: t('Web service', 'Service web'), body: t('Install nginx and check the service:', 'Installez nginx et vérifiez le service :'), code: 'sudo apt update && sudo apt install -y nginx\nsystemctl status nginx\ncurl -I http://localhost' },
+      { title: t('Web service', 'Service web'), body: t('Install nginx and check the service, then test from YOUR LAPTOP.', 'Installez nginx et vérifiez le service, puis testez depuis VOTRE PORTABLE.'), code: 'sudo apt update && sudo apt install -y nginx\nsystemctl status nginx\ncurl -I http://localhost\n\n# laptop\ncurl -I http://10.0.0.20' },
     ],
     checkpoints: [
       { id: 'l5-c1', topic: 'l3-linux', difficulty: 1, kind: 'command', shell: '$', prompt: t('Apply a modified netplan configuration.', 'Appliquer une configuration netplan modifiée.'), accept: ['sudo netplan apply'], explain: t('`sudo netplan apply`', '`sudo netplan apply`') },
@@ -312,6 +329,17 @@ export const LABS: LabDef[] = [
     troubleshooting: [
       { symptom: t('netplan apply: "Invalid YAML"', 'netplan apply : « Invalid YAML »'), fix: t('YAML needs spaces (never tabs) and consistent indentation.', 'Le YAML exige des espaces (jamais de tabulations) et une indentation cohérente.') },
       { symptom: t('"Permission denied (publickey)"', '« Permission denied (publickey) »'), fix: t('The key was not copied for that user, or ~/.ssh permissions are too open (700 for the folder, 600 for authorized_keys).', 'La clé n’a pas été copiée pour cet utilisateur, ou les permissions de ~/.ssh sont trop ouvertes (700 pour le dossier, 600 pour authorized_keys).') },
+    ],
+    vmTasks: [
+      { id: 'backup', points: 1, label: t('Backed up sshd_config before editing', 'sshd_config sauvegardé avant modification'), check: linuxChecks.backup as (s: never) => boolean },
+      { id: 'ip', points: 2, label: t('Static IP 10.0.0.20/24 via 10.0.0.1 applied', 'IP statique 10.0.0.20/24 via 10.0.0.1 appliquée'), check: linuxChecks.staticIp as (s: never) => boolean },
+      { id: 'dns', points: 1, label: t('DNS server 10.0.0.10 configured', 'Serveur DNS 10.0.0.10 configuré'), check: linuxChecks.dns as (s: never) => boolean },
+      { id: 'amina', points: 2, label: t('User amina in sudo (own group kept)', 'Utilisatrice amina dans sudo (son groupe conservé)'), check: linuxChecks.amina as (s: never) => boolean },
+      { id: 'key', points: 2, label: t('Laptop key installed for sysadmin', 'Clé du portable installée pour sysadmin'), check: linuxChecks.key as (s: never) => boolean },
+      { id: 'harden', points: 2, label: t('SSH: no passwords, no root login (and restarted)', 'SSH : pas de mot de passe, pas de root (et redémarré)'), check: linuxChecks.hardened as (s: never) => boolean },
+      { id: 'ufw', points: 2, label: t('ufw active, allowing OpenSSH and 80/tcp only', 'ufw actif, n’autorisant que OpenSSH et 80/tcp'), check: linuxChecks.ufw as (s: never) => boolean },
+      { id: 'nginx', points: 1, label: t('nginx installed, running and enabled', 'nginx installé, actif et activé au démarrage'), check: linuxChecks.nginx as (s: never) => boolean },
+      { id: 'web', points: 2, label: t('Laptop gets HTTP 200 from 10.0.0.20', 'Le portable reçoit HTTP 200 de 10.0.0.20'), check: linuxChecks.web as (s: never) => boolean },
     ],
     expected: t('`ip a` shows 10.0.0.20/24; SSH works with keys only; `curl -I` returns "HTTP/1.1 200 OK" from another machine.', '`ip a` affiche 10.0.0.20/24 ; SSH fonctionne uniquement par clé ; `curl -I` renvoie « HTTP/1.1 200 OK » depuis une autre machine.'),
     evaluation: [t('All steps completed (5 pts)', 'Toutes les étapes réalisées (5 pts)'), t('Checkpoint questions ≥ 80 % (5 pts)', 'Questions de contrôle ≥ 80 % (5 pts)')],
