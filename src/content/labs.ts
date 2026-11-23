@@ -382,6 +382,174 @@ export const LABS: LabDef[] = [
     evaluation: [t('Firewall interfaces (4 pts)', 'Interfaces du pare-feu (4 pts)'), t('Host corrections (4 pts)', 'Corrections des hôtes (4 pts)'), t('Inter-department reachability (4 pts)', 'Accessibilité inter-services (4 pts)'), t('Internet routing (3 pts)', 'Routage Internet (3 pts)')],
     packetTracer: t('In Packet Tracer use an ISR4331 in place of FW0 (interfaces g0/0/0–0/0/2 plus a NIM module), or an ASA with "nameif"/"security-level" commands.', 'Dans Packet Tracer, utilisez un ISR4331 à la place de FW0 (interfaces g0/0/0–0/0/2 plus un module NIM), ou un ASA avec les commandes « nameif »/« security-level ».'),
   },
+  /* ------------------------------ Lab 7 ------------------------------ */
+  {
+    id: 'lab-7', number: 7, levelId: 'technician', difficulty: 3, minutes: 40, kind: 'sim', xp: 260, skills: ['routing', 'networking'], recommendedAfter: 'l2-trunk.2',
+    title: t('Inter-VLAN routing: router on a stick', 'Routage inter-VLAN : routeur sur un bâton'),
+    scenario: t(
+      'Staff (VLAN 10, 192.168.10.0/24) and Accounting (VLAN 20, 192.168.20.0/24) share one switch. They are isolated — but accountants must reach the staff printer. You have one router with a single cable to the switch. Configure a trunk and router sub-interfaces.',
+      'Personnel (VLAN 10, 192.168.10.0/24) et Comptabilité (VLAN 20, 192.168.20.0/24) partagent un switch. Ils sont isolés — mais la comptabilité doit atteindre l’imprimante du personnel. Vous avez un routeur relié au switch par un seul câble. Configurez un trunk et des sous-interfaces.',
+    ),
+    objectives: [
+      t('Create VLANs and assign access ports', 'Créer des VLAN et affecter les ports d’accès'),
+      t('Configure an 802.1Q trunk towards the router', 'Configurer un trunk 802.1Q vers le routeur'),
+      t('Configure router sub-interfaces with encapsulation dot1q', 'Configurer des sous-interfaces avec encapsulation dot1q'),
+    ],
+    equipment: [t('1 × ISR4331 router', '1 × routeur ISR4331'), t('1 × 2960 switch', '1 × switch 2960'), t('2 PCs + 1 printer (pre-cabled)', '2 PC + 1 imprimante (pré-câblés)')],
+    palette: ['pc', 'laptop', 'printer'],
+    initial: () =>
+      build(
+        [
+          { id: 'r1', type: 'router', name: 'R1', x: 520, y: 110 },
+          { id: 'sw', type: 'switch', name: 'SW1', x: 520, y: 290 },
+          { id: 'staff', type: 'pc', name: 'STAFF-PC', x: 280, y: 460, cfg: host('192.168.10.10', '255.255.255.0', '192.168.10.1') },
+          { id: 'prn', type: 'printer', name: 'STAFF-PRN', x: 480, y: 470, cfg: host('192.168.10.50', '255.255.255.0', '192.168.10.1') },
+          { id: 'acct', type: 'pc', name: 'ACCT-PC', x: 760, y: 460, cfg: host('192.168.20.10', '255.255.255.0', '192.168.20.1') },
+        ],
+        [
+          ['r1', 'Gi0/0/0', 'sw', 'Gi0/1'],
+          ['staff', 'Fa0', 'sw', 'Fa0/1'],
+          ['prn', 'Fa0', 'sw', 'Fa0/2'],
+          ['acct', 'Fa0', 'sw', 'Fa0/11'],
+        ],
+      ),
+    steps: [
+      { title: t('VLANs on the switch', 'Les VLAN sur le switch'), body: t('Create the VLANs and put Fa0/1–2 in VLAN 10, Fa0/11 in VLAN 20.', 'Créez les VLAN et mettez Fa0/1–2 dans le VLAN 10, Fa0/11 dans le VLAN 20.'), code: 'enable\nconfigure terminal\nvlan 10\nname STAFF\nvlan 20\nname ACCOUNTING\ninterface range fa0/1 - 2\nswitchport mode access\nswitchport access vlan 10\ninterface fa0/11\nswitchport mode access\nswitchport access vlan 20' },
+      { title: t('Trunk to the router', 'Trunk vers le routeur'), body: t('The switch port facing the router must carry both VLANs.', 'Le port du switch face au routeur doit transporter les deux VLAN.'), code: 'interface gi0/1\nswitchport mode trunk\nend' },
+      { title: t('Router sub-interfaces', 'Sous-interfaces du routeur'), body: t('Turn on the physical interface (no IP on it!), then one sub-interface per VLAN with its gateway address.', 'Activez l’interface physique (sans IP !), puis une sous-interface par VLAN avec son adresse de passerelle.'), code: 'enable\nconfigure terminal\ninterface g0/0/0\nno shutdown\ninterface g0/0/0.10\nencapsulation dot1q 10\nip address 192.168.10.1 255.255.255.0\ninterface g0/0/0.20\nencapsulation dot1q 20\nip address 192.168.20.1 255.255.255.0\nend\nshow ip interface brief', hint: t('The number after the dot is just a name; the VLAN is set by `encapsulation dot1q`. Matching them keeps things readable.', 'Le numéro après le point n’est qu’un nom ; le VLAN est fixé par `encapsulation dot1q`. Les faire correspondre reste lisible.') },
+      { title: t('Verify', 'Vérifiez'), body: t('From ACCT-PC, ping its gateway, then the staff printer. In Simulation mode, watch the frame go up the trunk tagged 20 and come back down tagged 10.', 'Depuis ACCT-PC, pinguez sa passerelle, puis l’imprimante. En mode Simulation, regardez la trame monter le trunk étiquetée 20 et redescendre étiquetée 10.'), code: 'ping 192.168.20.1\nping 192.168.10.50' },
+    ],
+    tasks: [
+      { id: 'vlans', points: 1, label: t('VLAN 10 and 20 exist on SW1', 'VLAN 10 et 20 existent sur SW1'), check: (x) => !!byId(x, 'sw')?.vlans?.[10] && !!byId(x, 'sw')?.vlans?.[20] },
+      { id: 'ports', points: 2, label: t('Access ports in the right VLANs', 'Ports d’accès dans les bons VLAN'), check: (x) => ifc(x, 'sw', 'Fa0/1')?.vlan === 10 && ifc(x, 'sw', 'Fa0/2')?.vlan === 10 && ifc(x, 'sw', 'Fa0/11')?.vlan === 20 },
+      { id: 'trunk', points: 2, label: t('Gi0/1 is a trunk', 'Gi0/1 est un trunk'), check: (x) => ifc(x, 'sw', 'Gi0/1')?.mode === 'trunk' },
+      { id: 'sub10', points: 2, label: t('Sub-interface for VLAN 10 = 192.168.10.1/24', 'Sous-interface VLAN 10 = 192.168.10.1/24'), check: (x) => !!byId(x, 'r1')?.ifaces.some((i) => i.parent === 'Gi0/0/0' && i.dot1q === 10 && i.ip === '192.168.10.1' && i.mask === '255.255.255.0') },
+      { id: 'sub20', points: 2, label: t('Sub-interface for VLAN 20 = 192.168.20.1/24', 'Sous-interface VLAN 20 = 192.168.20.1/24'), check: (x) => !!byId(x, 'r1')?.ifaces.some((i) => i.parent === 'Gi0/0/0' && i.dot1q === 20 && i.ip === '192.168.20.1' && i.mask === '255.255.255.0') },
+      { id: 'gw', points: 1, label: t('ACCT-PC reaches its gateway', 'ACCT-PC joint sa passerelle'), check: (x) => pingById(x, 'acct', '192.168.20.1') },
+      { id: 'inter', points: 3, label: t('ACCT-PC reaches the staff printer (routed between VLANs)', 'ACCT-PC joint l’imprimante du personnel (routage inter-VLAN)'), check: (x) => pingById(x, 'acct', '192.168.10.50') },
+      { id: 'staff', points: 1, label: t('STAFF-PC reaches ACCT-PC', 'STAFF-PC joint ACCT-PC'), check: (x) => pingById(x, 'staff', '192.168.20.10') },
+    ],
+    troubleshooting: [
+      { symptom: t('Sub-interfaces are "down"', 'Les sous-interfaces sont « down »'), fix: t('The physical Gi0/0/0 must be `no shutdown`.', 'L’interface physique Gi0/0/0 doit être en `no shutdown`.') },
+      { symptom: t('One VLAN works, the other does not', 'Un VLAN marche, l’autre non'), fix: t('Check `encapsulation dot1q` numbers and the access VLAN of each port.', 'Vérifiez les numéros `encapsulation dot1q` et le VLAN d’accès de chaque port.') },
+      { symptom: t('Nothing reaches the router', 'Rien n’atteint le routeur'), fix: t('Is Gi0/1 on the switch a trunk? `show interfaces trunk`.', 'Gi0/1 du switch est-il en trunk ? `show interfaces trunk`.') },
+    ],
+    expected: t('Both sub-interfaces up/up in `show ip interface brief`; ACCT-PC pings 192.168.10.50 with TTL=127.', 'Les deux sous-interfaces up/up dans `show ip interface brief` ; ACCT-PC pingue 192.168.10.50 avec TTL=127.'),
+    evaluation: [t('Switching: VLANs, access ports, trunk (5 pts)', 'Commutation : VLAN, ports, trunk (5 pts)'), t('Router sub-interfaces (4 pts)', 'Sous-interfaces (4 pts)'), t('Verified inter-VLAN connectivity (5 pts)', 'Connectivité inter-VLAN vérifiée (5 pts)')],
+    packetTracer: t('Identical commands in Packet Tracer with an ISR4331 and a 2960.', 'Commandes identiques dans Packet Tracer avec un ISR4331 et un 2960.'),
+  },
+
+  /* ------------------------------ Lab 8 ------------------------------ */
+  {
+    id: 'lab-8', number: 8, levelId: 'technician', difficulty: 3, minutes: 45, kind: 'sim', xp: 280, skills: ['routing'], recommendedAfter: 'l2-routing.1',
+    title: t('Static routing across three sites', 'Routage statique entre trois sites'),
+    scenario: t(
+      'Head office (HQ), a warehouse and a branch are linked in a chain: HQ — WAREHOUSE — BRANCH. Each site has its own LAN and the WAN links are already addressed. Nobody can reach the other sites yet. Add static routes — in both directions — so every LAN reaches every other LAN.',
+      'Le siège (HQ), un entrepôt et une agence sont reliés en chaîne : HQ — ENTREPÔT — AGENCE. Chaque site a son LAN et les liens WAN sont déjà adressés. Personne n’atteint encore les autres sites. Ajoutez des routes statiques — dans les deux sens — pour que chaque LAN joigne tous les autres.',
+    ),
+    objectives: [
+      t('Read routing tables and find missing networks', 'Lire les tables de routage et trouver les réseaux manquants'),
+      t('Write static routes with the correct next hop', 'Écrire des routes statiques avec le bon saut suivant'),
+      t('Use a default route on a stub site', 'Utiliser une route par défaut sur un site terminal'),
+    ],
+    equipment: [t('3 × ISR4331 routers (pre-addressed)', '3 × routeurs ISR4331 (pré-adressés)'), t('3 × PCs (pre-addressed)', '3 × PC (pré-adressés)')],
+    palette: ['pc', 'laptop'],
+    initial: () => {
+      const r = (ifs: Record<string, [string, string]>) => (d: SimDevice): SimDevice => ({ ...d, ifaces: d.ifaces.map((i) => (ifs[i.name] ? { ...i, ip: ifs[i.name][0], mask: ifs[i.name][1], up: true } : i)) })
+      return build(
+        [
+          { id: 'hq', type: 'router', name: 'R-HQ', x: 220, y: 200, cfg: r({ 'Gi0/0/0': ['10.1.0.1', '255.255.255.0'], 'Gi0/0/1': ['172.16.12.1', '255.255.255.252'] }) },
+          { id: 'wh', type: 'router', name: 'R-WAREHOUSE', x: 520, y: 200, cfg: r({ 'Gi0/0/0': ['10.2.0.1', '255.255.255.0'], 'Gi0/0/1': ['172.16.12.2', '255.255.255.252'], 'Gi0/0/2': ['172.16.23.1', '255.255.255.252'] }) },
+          { id: 'br', type: 'router', name: 'R-BRANCH', x: 820, y: 200, cfg: r({ 'Gi0/0/0': ['10.3.0.1', '255.255.255.0'], 'Gi0/0/2': ['172.16.23.2', '255.255.255.252'] }) },
+          { id: 'pchq', type: 'pc', name: 'HQ-PC', x: 220, y: 420, cfg: host('10.1.0.10', '255.255.255.0', '10.1.0.1') },
+          { id: 'pcwh', type: 'pc', name: 'WH-PC', x: 520, y: 420, cfg: host('10.2.0.10', '255.255.255.0', '10.2.0.1') },
+          { id: 'pcbr', type: 'pc', name: 'BR-PC', x: 820, y: 420, cfg: host('10.3.0.10', '255.255.255.0', '10.3.0.1') },
+        ],
+        [
+          ['hq', 'Gi0/0/1', 'wh', 'Gi0/0/1'],
+          ['wh', 'Gi0/0/2', 'br', 'Gi0/0/2'],
+          ['pchq', 'Fa0', 'hq', 'Gi0/0/0'],
+          ['pcwh', 'Fa0', 'wh', 'Gi0/0/0'],
+          ['pcbr', 'Fa0', 'br', 'Gi0/0/0'],
+        ],
+      )
+    },
+    steps: [
+      { title: t('Look before you type', 'Regardez avant de taper'), body: t('On each router run `show ip route`. Which networks does each one know (C)? Which are missing?', 'Sur chaque routeur lancez `show ip route`. Quels réseaux chacun connaît-il (C) ? Lesquels manquent ?'), code: 'enable\nshow ip route' },
+      { title: t('R-HQ', 'R-HQ'), body: t('HQ only has one way out (towards the warehouse). Each remote LAN goes via 172.16.12.2.', 'Le siège n’a qu’une sortie (vers l’entrepôt). Chaque LAN distant passe par 172.16.12.2.'), code: 'configure terminal\nip route 10.2.0.0 255.255.255.0 172.16.12.2\nip route 10.3.0.0 255.255.255.0 172.16.12.2' },
+      { title: t('R-WAREHOUSE', 'R-ENTREPÔT'), body: t('The warehouse sits in the middle: it knows both WAN links but not the two outer LANs.', 'L’entrepôt est au milieu : il connaît les deux liens WAN mais pas les deux LAN extérieurs.'), code: 'configure terminal\nip route 10.1.0.0 255.255.255.0 172.16.12.1\nip route 10.3.0.0 255.255.255.0 172.16.23.2' },
+      { title: t('R-BRANCH: a stub site', 'R-AGENCE : un site terminal'), body: t('The branch has a single exit — one default route is enough.', 'L’agence n’a qu’une sortie — une route par défaut suffit.'), code: 'configure terminal\nip route 0.0.0.0 0.0.0.0 172.16.23.1', hint: t('Routing must work in BOTH directions: a ping needs a route there and a route back.', 'Le routage doit marcher dans les DEUX sens : un ping a besoin d’une route aller et d’une route retour.') },
+      { title: t('Verify', 'Vérifiez'), body: t('From HQ-PC: ping and tracert BR-PC. You should see 3 hops and TTL=125 (3 routers crossed).', 'Depuis HQ-PC : ping et tracert de BR-PC. Vous devriez voir 3 sauts et TTL=125 (3 routeurs traversés).'), code: 'ping 10.3.0.10\ntracert 10.3.0.10' },
+    ],
+    tasks: [
+      { id: 'hq-wh', points: 2, label: t('HQ-PC reaches WH-PC', 'HQ-PC joint WH-PC'), check: (x) => pingById(x, 'pchq', '10.2.0.10') },
+      { id: 'hq-br', points: 3, label: t('HQ-PC reaches BR-PC (two hops away)', 'HQ-PC joint BR-PC (à deux sauts)'), check: (x) => pingById(x, 'pchq', '10.3.0.10') },
+      { id: 'wh-br', points: 2, label: t('WH-PC reaches BR-PC', 'WH-PC joint BR-PC'), check: (x) => pingById(x, 'pcwh', '10.3.0.10') },
+      { id: 'br-hq', points: 2, label: t('BR-PC reaches HQ-PC', 'BR-PC joint HQ-PC'), check: (x) => pingById(x, 'pcbr', '10.1.0.10') },
+      { id: 'stub', points: 2, label: t('R-BRANCH uses a single default route', 'R-AGENCE utilise une seule route par défaut'), check: (x) => { const rt = byId(x, 'br')?.routes ?? []; return rt.length === 1 && rt[0].net === '0.0.0.0' && rt[0].mask === '0.0.0.0' } },
+    ],
+    troubleshooting: [
+      { symptom: t('Ping to a remote PC times out', 'Le ping d’un PC distant expire'), fix: t('Check the return path: does the far router have a route back to your LAN?', 'Vérifiez le retour : le routeur distant a-t-il une route vers votre LAN ?') },
+      { symptom: t('"% Inconsistent address and mask"', '« % Inconsistent address and mask »'), fix: t('Use the network address (10.2.0.0), not a host address (10.2.0.1), in ip route.', 'Utilisez l’adresse réseau (10.2.0.0), pas une adresse d’hôte (10.2.0.1), dans ip route.') },
+      { symptom: t('Ping shows "Destination host unreachable" from a router', 'Le ping affiche « Destination host unreachable » depuis un routeur'), fix: t('That router has no route for the destination — `show ip route` on it.', 'Ce routeur n’a pas de route pour la destination — `show ip route` dessus.') },
+    ],
+    expected: t('Every PC pings every other PC; tracert from HQ-PC to BR-PC lists 10.1.0.1, 172.16.12.2, 172.16.23.2.', 'Chaque PC pingue tous les autres ; tracert de HQ-PC vers BR-PC liste 10.1.0.1, 172.16.12.2, 172.16.23.2.'),
+    evaluation: [t('Connectivity between all sites (9 pts)', 'Connectivité entre tous les sites (9 pts)'), t('Clean design: default route on the stub (2 pts)', 'Conception propre : route par défaut sur le site terminal (2 pts)')],
+    packetTracer: t('Same in Packet Tracer — try OSPF afterwards and compare the routing tables.', 'Pareil dans Packet Tracer — essayez OSPF ensuite et comparez les tables de routage.'),
+  },
+
+  /* ------------------------------ Lab 9 ------------------------------ */
+  {
+    id: 'lab-9', number: 9, levelId: 'technician', difficulty: 3, minutes: 40, kind: 'sim', xp: 300, skills: ['networking', 'routing'], recommendedAfter: 'l2-troubleshoot.3',
+    title: t('Troubleshooting lab: the broken branch office', 'Lab de dépannage : l’agence en panne'),
+    scenario: t(
+      'A contractor built the branch network last night and went home. Nothing works. There are FOUR different faults hidden in the configuration (layers 1 to 3). Find them with show commands, ipconfig and ping — then fix them. No step-by-step instructions this time: use the method.',
+      'Un prestataire a monté le réseau de l’agence cette nuit puis est rentré chez lui. Rien ne marche. QUATRE pannes différentes sont cachées dans la configuration (couches 1 à 3). Trouvez-les avec les commandes show, ipconfig et ping — puis corrigez-les. Pas de pas-à-pas cette fois : appliquez la méthode.',
+    ),
+    objectives: [
+      t('Apply bottom-up troubleshooting on a real topology', 'Appliquer le dépannage de bas en haut sur une vraie topologie'),
+      t('Find faults at layers 1, 2 and 3', 'Trouver des pannes en couches 1, 2 et 3'),
+    ],
+    equipment: [t('Router, switch, 3 PCs, 1 server — all pre-configured (badly)', 'Routeur, switch, 3 PC, 1 serveur — tous préconfigurés (mal)')],
+    palette: [],
+    initial: () =>
+      build(
+        [
+          { id: 'r1', type: 'router', name: 'R-BRANCH', x: 520, y: 100, cfg: (d) => ({ ...d, ifaces: d.ifaces.map((i) => (i.name === 'Gi0/0/0' ? { ...i, ip: '192.168.50.1', mask: '255.255.255.0', up: true } : i.name === 'Gi0/0/1' ? { ...i, ip: '192.168.60.1', mask: '255.255.255.0', up: false } : i)) }) },
+          { id: 'sw', type: 'switch', name: 'SW-BRANCH', x: 380, y: 280, cfg: (d) => ({ ...d, vlans: { 1: 'default', 50: 'USERS' }, ifaces: d.ifaces.map((i) => (['Fa0/1', 'Fa0/2', 'Gi0/1'].includes(i.name) ? { ...i, vlan: 50, mode: 'access' as const } : i.name === 'Fa0/3' ? { ...i, vlan: 1, mode: 'access' as const } : i)) }) },
+          { id: 'pc1', type: 'pc', name: 'PC-1', x: 180, y: 460, cfg: host('192.168.50.11', '255.255.255.0', '192.168.50.1') },
+          { id: 'pc2', type: 'pc', name: 'PC-2', x: 380, y: 460, cfg: host('192.168.50.12', '255.255.255.0', '192.168.5.1') },
+          { id: 'pc3', type: 'pc', name: 'PC-3', x: 580, y: 460, cfg: host('192.168.50.13', '255.255.255.0', '192.168.50.1') },
+          { id: 'srv', type: 'server', name: 'SRV-FILES', x: 820, y: 280, cfg: host('192.168.60.10', '255.255.255.0', '192.168.60.254') },
+        ],
+        [
+          ['r1', 'Gi0/0/0', 'sw', 'Gi0/1'],
+          ['pc1', 'Fa0', 'sw', 'Fa0/1'],
+          ['pc2', 'Fa0', 'sw', 'Fa0/2'],
+          ['pc3', 'Fa0', 'sw', 'Fa0/3'],
+          ['srv', 'Fa0', 'r1', 'Gi0/0/1'],
+        ],
+      ),
+    steps: [
+      { title: t('Map the network', 'Cartographiez le réseau'), body: t('Users: 192.168.50.0/24 (VLAN 50), gateway .1. Server LAN: 192.168.60.0/24, gateway .1. Every PC must reach SRV-FILES (192.168.60.10).', 'Utilisateurs : 192.168.50.0/24 (VLAN 50), passerelle .1. LAN serveur : 192.168.60.0/24, passerelle .1. Chaque PC doit joindre SRV-FILES (192.168.60.10).') },
+      { title: t('Use the method', 'Appliquez la méthode'), body: t('From each PC: `ipconfig`, `ping` the gateway, `ping` the server. On the switch: `show vlan brief`. On the router: `show ip interface brief`. Note every anomaly before fixing anything.', 'Depuis chaque PC : `ipconfig`, `ping` de la passerelle, `ping` du serveur. Sur le switch : `show vlan brief`. Sur le routeur : `show ip interface brief`. Notez chaque anomalie avant de corriger.'), hint: t('Faults: one router interface, one switch port, one PC gateway… and the fourth one only appears once the first three are fixed. Look at the server.', 'Pannes : une interface de routeur, un port de switch, une passerelle de PC… et la quatrième n’apparaît qu’une fois les trois premières corrigées. Regardez le serveur.') },
+    ],
+    tasks: [
+      { id: 'pc1', points: 2, label: t('PC-1 reaches SRV-FILES', 'PC-1 joint SRV-FILES'), check: (x) => pingById(x, 'pc1', '192.168.60.10') },
+      { id: 'pc2', points: 3, label: t('PC-2 reaches SRV-FILES', 'PC-2 joint SRV-FILES'), check: (x) => pingById(x, 'pc2', '192.168.60.10') },
+      { id: 'pc3', points: 3, label: t('PC-3 reaches SRV-FILES', 'PC-3 joint SRV-FILES'), check: (x) => pingById(x, 'pc3', '192.168.60.10') },
+      { id: 'clean', points: 2, label: t('No PC left in VLAN 1', 'Aucun PC laissé dans le VLAN 1'), check: (x) => ['Fa0/1', 'Fa0/2', 'Fa0/3'].every((p) => ifc(x, 'sw', p)?.vlan === 50) },
+    ],
+    troubleshooting: [
+      { symptom: t('Nobody reaches the server', 'Personne n’atteint le serveur'), fix: t('Router: one interface is administratively down.', 'Routeur : une interface est administrativement coupée.') },
+      { symptom: t('PC-3 cannot even ping its gateway', 'PC-3 ne pingue même pas sa passerelle'), fix: t('Its switch port is in the wrong VLAN.', 'Son port de switch est dans le mauvais VLAN.') },
+      { symptom: t('PC-2 reaches local PCs only', 'PC-2 n’atteint que les PC locaux'), fix: t('Look carefully at its default gateway.', 'Regardez attentivement sa passerelle par défaut.') },
+    ],
+    expected: t('All three PCs ping 192.168.60.10 with TTL=127.', 'Les trois PC pinguent 192.168.60.10 avec TTL=127.'),
+    evaluation: [t('Each repaired path (8 pts)', 'Chaque chemin réparé (8 pts)'), t('Clean VLAN configuration (2 pts)', 'Configuration VLAN propre (2 pts)')],
+    packetTracer: t('Recreate the broken topology in Packet Tracer and challenge a friend to fix it.', 'Recréez la topologie cassée dans Packet Tracer et mettez un ami au défi de la réparer.'),
+  },
+
 ]
 
 export const labById = (id: string) => LABS.find((l) => l.id === id)

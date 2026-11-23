@@ -30,9 +30,9 @@ const LONG: Record<string, string> = { Fa: 'FastEthernet', Gi: 'GigabitEthernet'
 
 /** Accepts "g0/0/0", "gi0/0/0", "GigabitEthernet0/0/0", "fa0/1", "f0/1"… → canonical short form "Gi0/0/0". */
 export function normalizeIface(input: string): string | null {
-  const m = input.trim().match(/^(g|gi|gig|giga|gigabit|gigabitethernet|f|fa|fas|fast|fastethernet)\s*(\d+(?:\/\d+){0,2})$/i)
+  const m = input.trim().match(/^(g|gi|gig|giga|gigabit|gigabitethernet|f|fa|fas|fast|fastethernet)\s*(\d+(?:\/\d+){0,2})(\.\d+)?$/i)
   if (!m) return null
-  return `${m[1].toLowerCase().startsWith('g') ? 'Gi' : 'Fa'}${m[2]}`
+  return `${m[1].toLowerCase().startsWith('g') ? 'Gi' : 'Fa'}${m[2]}${m[3] ?? ''}`
 }
 
 export const longIface = (short: string) => {
@@ -97,7 +97,7 @@ export const linkAt = (t: Topology, ep: Endpoint) =>
 
 export const peerOf = (l: SimLink, ep: Endpoint): Endpoint => (l.a.dev === ep.dev && l.a.iface === ep.iface ? l.b : l.a)
 
-export const freeIfaces = (t: Topology, d: SimDevice) => d.ifaces.filter((i) => !linkAt(t, { dev: d.id, iface: i.name }))
+export const freeIfaces = (t: Topology, d: SimDevice) => d.ifaces.filter((i) => !i.parent && !linkAt(t, { dev: d.id, iface: i.name }))
 
 /** A link carries traffic when both interfaces are administratively up. */
 export function linkUp(t: Topology, l: SimLink) {

@@ -194,7 +194,7 @@ export const fr: Dict = {
   },
   exam: {
     center: 'Centre d’évaluation',
-    centerSub: 'Prouvez ce que vous savez. Points de contrôle après chaque paire de modules, pratiques où vous tapez de vraies commandes, et l’examen de certification niveau 1.',
+    centerSub: 'Prouvez ce que vous savez. Points de contrôle après chaque paire de modules, pratiques où vous tapez de vraies commandes, et un examen de certification par niveau.',
     levelAssessments: 'Niveau {n} · {title}',
     practice: 'Zone d’entraînement',
     practiceSub: 'Exercices générés à l’infini. La difficulté s’adapte à vous et les points faibles reviennent plus souvent.',

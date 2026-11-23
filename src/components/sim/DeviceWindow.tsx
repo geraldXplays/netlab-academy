@@ -153,7 +153,7 @@ export function DeviceWindow({ deviceId, topo, setTopo, rt, onPing, onClose }: {
                     <tr><th className="px-2 py-1.5 text-left">Port</th><th className="px-2 text-left">{tr('Link', 'Lien')}</th><th className="px-2 text-left">{tr('Connected to', 'Connecté à')}</th><th className="px-2 text-left">MAC</th></tr>
                   </thead>
                   <tbody>
-                    {d.ifaces.map((i) => {
+                    {d.ifaces.filter((i) => !i.parent).map((i) => {
                       const l = linkAt(topo, { dev: d.id, iface: i.name })
                       const peer = l && peerOf(l, { dev: d.id, iface: i.name })
                       const up = l && linkUp(topo, l)

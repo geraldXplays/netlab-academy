@@ -367,7 +367,7 @@ export function Workspace({ topo, setTopo, palette, className }: {
                 data-lenis-prevent
               >
                 <p className="border-b border-line px-3 py-1.5 text-[0.68rem] font-semibold text-dim">{d.name}</p>
-                {d.ifaces.map((i) => (
+                {d.ifaces.filter((i) => !i.parent).map((i) => (
                   <button
                     key={i.name}
                     disabled={!free.has(i.name)}

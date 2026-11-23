@@ -19,6 +19,9 @@ export interface Iface {
   description?: string
   /** Port shut by a protection feature (port-security violation). Cleared by shutdown / no shutdown. */
   err?: boolean
+  /** Router sub-interface (router-on-a-stick): parent physical interface and 802.1Q VLAN. */
+  parent?: string
+  dot1q?: number
 }
 
 export interface Route {

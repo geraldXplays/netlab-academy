@@ -192,7 +192,7 @@ export const en = {
   },
   exam: {
     center: 'Assessment centre',
-    centerSub: 'Prove what you know. Checkpoints after each pair of modules, practicals where you type real commands, and the Level 1 certification exam.',
+    centerSub: 'Prove what you know. Checkpoints after each pair of modules, practicals where you type real commands, and a certification exam for each level.',
     levelAssessments: 'Level {n} · {title}',
     practice: 'Practice arena',
     practiceSub: 'Unlimited generated exercises. Difficulty adapts to you, and weak topics come back more often.',

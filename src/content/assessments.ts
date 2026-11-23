@@ -3,6 +3,7 @@ import { LEVELS } from './curriculum'
 import { LESSONS, type ExamQuestion } from './lessons'
 import { COMMAND_BANK, CONFIG_BANK, ORDER_BANK, TROUBLESHOOT_BANK } from './assess/banks'
 import { ADDRESSING_GENERATORS, SUBNET_GENERATORS } from './assess/generators'
+import { IOS_BANK, L2_CONFIG_BANK, L2_ORDER_BANK, L2_TROUBLE_BANK } from './assess/l2bank'
 
 export interface Assessment {
   id: string
@@ -50,6 +51,7 @@ const byIds = (bank: ExamQuestion[], ...ids: string[]) => bank.filter((q) => ids
 const byTopic = (bank: ExamQuestion[], ...topics: string[]) => bank.filter((q) => topics.includes(q.topic))
 
 const L1_MODULES = LEVELS[0].modules.map((m) => m.id)
+const L2_MODULES = LEVELS[1].modules.map((m) => m.id)
 
 export const ASSESSMENTS: Assessment[] = [
   {
@@ -113,6 +115,62 @@ export const ASSESSMENTS: Assessment[] = [
     description: { en: 'Generated subnetting problems up to /30 — 90% required.', fr: 'Problèmes de sous-réseaux générés jusqu’à /30 — 90 % requis.' },
     requires: lessonsOf('l2-subnet'),
     pool: () => gen(SUBNET_GENERATORS, 6),
+  },
+  {
+    id: 'a-l2-models', levelId: 'technician', kind: 'quiz', questions: 12, minutes: 15, passRatio: 0.75, xp: 120, feedback: 'instant',
+    title: { en: 'Models & addressing checkpoint', fr: 'Point de contrôle modèles & adressage' },
+    description: { en: 'OSI and TCP/IP, ports, TCP vs UDP, IPv4 special ranges and IPv6.', fr: 'OSI et TCP/IP, ports, TCP vs UDP, plages IPv4 spéciales et IPv6.' },
+    requires: lessonsOf('l2-osi', 'l2-ipv4-6'),
+    pool: () => [...lessonQuestions('l2-osi', 'l2-ipv4-6'), ...byIds(L2_ORDER_BANK, 'l2ord-tcp'), ...byIds(L2_TROUBLE_BANK, 'l2ts-ports')],
+  },
+  {
+    id: 'a-l2-switching', levelId: 'technician', kind: 'quiz', questions: 14, minutes: 18, passRatio: 0.75, xp: 150, feedback: 'instant',
+    title: { en: 'Switching & VLANs checkpoint', fr: 'Point de contrôle commutation & VLAN' },
+    description: { en: 'MAC learning, ARP, STP, VLANs, trunks and inter-VLAN routing.', fr: 'Apprentissage MAC, ARP, STP, VLAN, trunks et routage inter-VLAN.' },
+    requires: lessonsOf('l2-switch', 'l2-vlan', 'l2-trunk'),
+    pool: () => [...lessonQuestions('l2-switch', 'l2-vlan', 'l2-trunk'), ...byTopic(L2_TROUBLE_BANK, 'l2-switch', 'l2-vlan', 'l2-trunk'), ...byIds(L2_CONFIG_BANK, 'l2cfg-roas')],
+  },
+  {
+    id: 'a-l2-routing', levelId: 'technician', kind: 'quiz', questions: 12, minutes: 16, passRatio: 0.75, xp: 150, feedback: 'instant',
+    title: { en: 'Routing checkpoint', fr: 'Point de contrôle routage' },
+    description: { en: 'Routing tables, longest prefix match, static and default routes, OSPF.', fr: 'Tables de routage, correspondance la plus longue, routes statiques et par défaut, OSPF.' },
+    requires: lessonsOf('l2-router', 'l2-routing'),
+    pool: () => [...lessonQuestions('l2-router', 'l2-routing'), ...byTopic(L2_TROUBLE_BANK, 'l2-router', 'l2-routing')],
+  },
+  {
+    id: 'a-l2-services', levelId: 'technician', kind: 'quiz', questions: 12, minutes: 16, passRatio: 0.75, xp: 150, feedback: 'instant',
+    title: { en: 'Network services checkpoint', fr: 'Point de contrôle services réseau' },
+    description: { en: 'DHCP, DNS and NAT — how they work and how they fail.', fr: 'DHCP, DNS et NAT — leur fonctionnement et leurs pannes.' },
+    requires: lessonsOf('l2-dhcp', 'l2-dns', 'l2-nat'),
+    pool: () => [...lessonQuestions('l2-dhcp', 'l2-dns', 'l2-nat'), ...byTopic(L2_TROUBLE_BANK, 'l2-dhcp', 'l2-dns', 'l2-nat'), ...byIds(L2_ORDER_BANK, 'l2ord-dora', 'l2ord-dns'), ...byIds(L2_CONFIG_BANK, 'l2cfg-dhcp')],
+  },
+  {
+    id: 'a-l2-ios', levelId: 'technician', kind: 'practical', questions: 15, minutes: 18, passRatio: 0.8, xp: 200, feedback: 'instant',
+    title: { en: 'Cisco IOS practical', fr: 'Pratique Cisco IOS' },
+    description: { en: 'Type real switch and router commands from memory — VLANs, trunks, routes, DHCP, NAT.', fr: 'Tapez de mémoire de vraies commandes de switch et routeur — VLAN, trunks, routes, DHCP, NAT.' },
+    requires: lessonsOf('l2-switch', 'l2-router', 'l2-vlan'),
+    pool: () => [...IOS_BANK, ...byIds(L2_ORDER_BANK, 'l2ord-switch')],
+  },
+  {
+    id: 'a-l2-troubleshoot', levelId: 'technician', kind: 'practical', questions: 10, minutes: 20, passRatio: 0.8, xp: 220, feedback: 'instant', badge: 'ping-master',
+    title: { en: 'Troubleshooting practical', fr: 'Pratique de dépannage' },
+    description: { en: 'Real outputs from switches, routers and PCs. Find the fault and the fix.', fr: 'De vraies sorties de switches, routeurs et PC. Trouvez la panne et la correction.' },
+    requires: lessonsOf('l2-troubleshoot'),
+    pool: () => [...L2_TROUBLE_BANK, ...lessonQuestions('l2-troubleshoot'), ...byIds(L2_ORDER_BANK, 'l2ord-ts')],
+  },
+  {
+    id: 'a-l2-exam', levelId: 'technician', kind: 'exam', questions: 40, minutes: 60, passRatio: 0.8, xp: 500, feedback: 'end', badge: 'technician-certified', certificate: true,
+    title: { en: 'Level 2 certification exam', fr: 'Examen de certification niveau 2' },
+    description: { en: 'The whole Network Technician level under exam conditions: models, subnetting, switching, routing, services and troubleshooting. 80% to earn your certificate and unlock Level 3.', fr: 'Tout le niveau Technicien réseau en conditions d’examen : modèles, sous-réseaux, commutation, routage, services et dépannage. 80 % pour le certificat et débloquer le niveau 3.' },
+    requires: lessonsOf(...L2_MODULES),
+    pool: () => [
+      ...lessonQuestions(...L2_MODULES),
+      ...gen(SUBNET_GENERATORS, 3),
+      ...IOS_BANK,
+      ...L2_TROUBLE_BANK,
+      ...L2_CONFIG_BANK,
+      ...L2_ORDER_BANK,
+    ],
   },
 ]
 

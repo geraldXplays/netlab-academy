@@ -24,7 +24,7 @@ export function prompt(d: SimDevice, s: IosState) {
     case 'config':
       return `${h}(config)#`
     case 'config-if':
-      return `${h}(config-if${s.targets.length > 1 ? '-range' : ''})#`
+      return `${h}(config-${s.targets.some((x) => x.includes('.')) ? 'subif' : 'if'}${s.targets.length > 1 ? '-range' : ''})#`
     case 'config-vlan':
       return `${h}(config-vlan)#`
   }
@@ -44,10 +44,14 @@ export interface IosResult {
 }
 
 /** Status words for "show ip interface brief". */
-function ifStatus(t: Topology, d: SimDevice, name: string) {
+function ifStatus(t: Topology, d: SimDevice, name: string): [string, string] {
   const i = iface(d, name)!
   if (!i.up) return ['administratively down', 'down']
   if (i.err) return ['down (err-disabled)', 'down']
+  if (i.parent) {
+    const [ps, pp] = ifStatus(t, d, i.parent)
+    return ps === 'administratively down' ? ['down', 'down'] : [ps, pp]
+  }
   const l = linkAt(t, { dev: d.id, iface: name })
   if (!l || !linkUp(t, l)) return ['down', 'down']
   return ['up', 'up']
@@ -95,6 +99,7 @@ function runningConfig(d: SimDevice): string[] {
   for (const i of d.ifaces) {
     out.push(`interface ${longIface(i.name)}`)
     if (i.description) out.push(` description ${i.description}`)
+    if (i.parent && i.dot1q) out.push(` encapsulation dot1Q ${i.dot1q}`)
     if (d.type === 'switch') {
       if (i.mode === 'trunk') out.push(' switchport mode trunk')
       else if ((i.vlan ?? 1) !== 1) out.push(` switchport access vlan ${i.vlan}`, ' switchport mode access')
@@ -110,7 +115,7 @@ function runningConfig(d: SimDevice): string[] {
 }
 
 function showIpIntBrief(t: Topology, d: SimDevice) {
-  const pad = (s: string, n: number) => s.padEnd(n)
+  const pad = (s: string, n: number) => (s.length >= n ? `${s} ` : s.padEnd(n))
   const out = [`${pad('Interface', 23)}${pad('IP-Address', 16)}${pad('OK?', 4)}${pad('Method', 7)}${pad('Status', 22)}Protocol`]
   for (const i of d.ifaces) {
     const [st, pr] = ifStatus(t, d, i.name)
@@ -247,7 +252,13 @@ export function runIos(topo: Topology, devId: string, state: IosState, raw: stri
         return { topo: t, state: { mode: 'config-if', targets: list }, out: [] }
       }
       const name = normalizeIface(tok.slice(1).join(''))
-      if (!name || !iface(d0, name)) return { topo: t, state: s, out: INVALID(line) }
+      if (!name) return { topo: t, state: s, out: INVALID(line) }
+      if (!iface(d0, name)) {
+        const dot = name.indexOf('.')
+        const parent = dot > 0 ? iface(d0, name.slice(0, dot)) : undefined
+        if (!router || !parent || parent.parent) return { topo: t, state: s, out: INVALID(line) }
+        t = updateDevice(t, devId, (d) => ({ ...d, ifaces: [...d.ifaces, { name, mac: parent.mac, up: true, parent: parent.name }] }))
+      }
       return { topo: t, state: { mode: 'config-if', targets: [name] }, out: [] }
     }
     if (is(tok[0], 'vlan') && d0.type === 'switch') {
@@ -295,6 +306,16 @@ export function runIos(topo: Topology, devId: string, state: IosState, raw: stri
       t = updateDevice(t, devId, (d) => ({ ...d, ifaces: d.ifaces.map((i) => (i.name === name ? { ...i, up: neg, err: neg ? false : i.err } : i)) }))
       out.push(...linkMessages(t, dev(t, devId)!, name, neg))
     }
+    return { topo: t, state: s, out }
+  }
+  if (is(tok[0], 'encapsulation')) {
+    const target = s.targets[0]
+    const ti = iface(d0, target)
+    if (!router || !ti?.parent) return { topo: t, state: s, out: INVALID(line) }
+    if (!/^dot1q$/i.test(tok[1] ?? '') ) return { topo: t, state: s, out: INVALID(line) }
+    const id = Number(tok[2])
+    if (!Number.isInteger(id) || id < 1 || id > 4094) return { topo: t, state: s, out: INCOMPLETE }
+    t = updateDevice(t, devId, (d) => ({ ...d, ifaces: d.ifaces.map((i) => (i.name === target ? { ...i, dot1q: id } : i)) }))
     return { topo: t, state: s, out }
   }
   if (is(tok[0], 'description')) {

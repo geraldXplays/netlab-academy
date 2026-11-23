@@ -35,23 +35,41 @@ interface Terminal {
   hops: Hop[]
 }
 
+/** A sub-interface sends/receives on its parent's cable with an 802.1Q tag. */
+function physical(t: Topology, ep: Endpoint): { ep: Endpoint; vlan: number | null } {
+  const d = dev(t, ep.dev)
+  const i = d && iface(d, ep.iface)
+  if (i?.parent) return { ep: { dev: ep.dev, iface: i.parent }, vlan: i.dot1q ?? null }
+  return { ep, vlan: null }
+}
+
 /**
  * Layer 2 flood from an interface: walk through switches respecting access
  * VLANs and trunks, stopping at hosts and router interfaces. Returns every
  * L3 endpoint reachable in the same broadcast domain with the cable path.
  */
-export function l2Reach(t: Topology, start: Endpoint): Terminal[] {
+export function l2Reach(t: Topology, start0: Endpoint): Terminal[] {
   const out: Terminal[] = []
+  const sd = dev(t, start0.dev)
+  const si = sd && iface(sd, start0.iface)
+  if (si?.parent && (!si.up || si.dot1q === undefined)) return out
+  const { ep: start, vlan: startVlan } = physical(t, start0)
   const first = linkAt(t, start)
   if (!first || !linkUp(t, first)) return out
   type State = { ep: Endpoint; vlan: number | null; tagged: boolean; hops: Hop[] }
-  const queue: State[] = [{ ep: peerOf(first, start), vlan: null, tagged: false, hops: [{ from: start.dev, to: peerOf(first, start).dev, link: first.id, kind: 'ICMP' }] }]
+  const queue: State[] = [{ ep: peerOf(first, start), vlan: startVlan, tagged: startVlan !== null, hops: [{ from: start.dev, to: peerOf(first, start).dev, link: first.id, kind: 'ICMP' }] }]
   const seen = new Set<string>()
   while (queue.length) {
     const s = queue.shift()!
     const d = dev(t, s.ep.dev)
     if (!d) continue
     if (d.type !== 'switch') {
+      if (s.tagged && s.vlan !== null) {
+        // Tagged frame: only a matching router sub-interface accepts it.
+        const subif = d.ifaces.find((i) => i.parent === s.ep.iface && i.dot1q === s.vlan && i.up)
+        if (subif) out.push({ ep: { dev: d.id, iface: subif.name }, hops: s.hops })
+        continue
+      }
       out.push({ ep: s.ep, hops: s.hops })
       continue
     }
