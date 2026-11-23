@@ -47,7 +47,7 @@ export default function RouteError() {
           <button onClick={() => window.location.reload()} className="flex items-center gap-2 rounded-full bg-cyan px-5 py-2.5 font-semibold text-on-accent">
             <RefreshCw size={16} /> {fr ? 'Recharger' : 'Reload'}
           </button>
-          <a href="/" className="flex items-center gap-2 rounded-full border border-line-strong px-5 py-2.5 text-muted hover:text-text">
+          <a href={import.meta.env.BASE_URL} className="flex items-center gap-2 rounded-full border border-line-strong px-5 py-2.5 text-muted hover:text-text">
             <Home size={16} /> {fr ? 'Accueil' : 'Home'}
           </a>
         </div>

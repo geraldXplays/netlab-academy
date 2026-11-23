@@ -66,7 +66,7 @@ const router = createBrowserRouter([
       { path: '*', element: s(<NotFound />) },
     ],
   },
-])
+], { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })
 
 /** Mirrors settings onto <html> so CSS tokens and the motion guard follow them. */
 function SettingsSync() {

@@ -139,7 +139,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
     const { data, error } = await supabase.auth.signUp({
       email: e,
       password,
-      options: { data: { name: n.slice(0, 40) }, emailRedirectTo: `${window.location.origin}/dashboard` },
+      options: { data: { name: n.slice(0, 40) }, emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}dashboard` },
     })
     if (error) throw mapError(error)
     // With email confirmation on, Supabase returns a user without a session.
@@ -169,7 +169,7 @@ export const useAuth = create<AuthState>()((set, get) => ({
 
   sendReset: async (email) => {
     if (!isEmail(email.trim())) throw 'invalid-email' as AuthError
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: `${window.location.origin}/reset` })
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}reset` })
     if (error) throw mapError(error)
   },
 
