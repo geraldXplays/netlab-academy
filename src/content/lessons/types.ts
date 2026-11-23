@@ -24,6 +24,11 @@ export type DiagramKey =
   | 'home-network'
   | 'packet-journey'
 
+/** Step-by-step animated examples (components/anim). */
+export type AnimKey = 'osi-encap' | 'tcp-handshake' | 'ipv6-compress' | 'binary-and' | 'subnet-split' | 'vlsm'
+/** Interactive widgets learners can play with. */
+export type WidgetKey = 'subnet-calc'
+
 export type Block =
   | { type: 'text'; title?: L; body: L }
   | { type: 'callout'; tone: 'tip' | 'warn' | 'info' | 'pro'; title?: L | string; body: L }
@@ -32,6 +37,8 @@ export type Block =
   | { type: 'code'; code: string; caption?: L }
   | { type: 'table'; head: (L | string)[]; rows: (L | string)[][] }
   | { type: 'check'; question: Question }
+  | { type: 'animation'; anim: AnimKey; title: L }
+  | { type: 'widget'; widget: WidgetKey }
 
 export type Question =
   | { kind: 'mcq'; prompt: L; options: (L | string)[]; answer: number; explain: L | string; code?: string }

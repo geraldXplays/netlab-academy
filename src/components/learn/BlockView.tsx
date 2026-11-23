@@ -1,6 +1,7 @@
 import { AlertTriangle, Briefcase, Info, Lightbulb, HelpCircle, Terminal } from 'lucide-react'
 import type { Block } from '@/content/lessons'
 import { DIAGRAMS } from '@/components/diagrams'
+import { Animation, WIDGETS } from '@/components/anim'
 import { useI18n } from '@/i18n'
 import { useProgress } from '@/store/progress'
 import { cn } from '@/lib/cn'
@@ -68,6 +69,12 @@ export function BlockView({ block, lessonId, index }: { block: Block; lessonId: 
           <figcaption className="mt-3 text-center text-sm text-dim">{txt(block.caption, lang)}</figcaption>
         </figure>
       )
+    }
+    case 'animation':
+      return <Animation anim={block.anim} title={txt(block.title, lang)} />
+    case 'widget': {
+      const W = WIDGETS[block.widget]
+      return <W />
     }
     case 'example':
       return (
