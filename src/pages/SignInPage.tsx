@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { ArrowRight, Check, Eye, EyeOff, Lock, Loader2, ShieldCheck } from 'lucide-react'
 import { gsap, useGSAP } from '@/lib/gsap'
 import { useAuth } from '@/store/auth'
-import { passwordStrength, type AuthError } from '@/auth/local'
+import { passwordStrength, type AuthError } from '@/auth/types'
 import { useI18n } from '@/i18n'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
 import { DecryptText } from '@/components/ui/DecryptText'
@@ -12,7 +12,7 @@ import { LogoMark } from '@/components/ui/Logo'
 import { Device, DeviceDefs } from '@/components/devices/Device'
 import { cn } from '@/lib/cn'
 
-type Mode = 'in' | 'up'
+type Mode = 'in' | 'up' | 'reset'
 
 export default function SignInPage() {
   const { d, f } = useI18n()
@@ -21,9 +21,10 @@ export default function SignInPage() {
   const raw = params.get('next') || '/dashboard'
   // Only same-site paths, and never back to the sign-in page.
   const next = raw.startsWith('/') && !raw.startsWith('//') && !raw.startsWith('/signin') ? raw : '/dashboard'
-  const { user, signIn, signUp } = useAuth()
+  const { user, signIn, signUp, sendReset } = useAuth()
+  const [notice, setNotice] = useState<string | null>(null)
   const reduced = useReducedMotionPref()
-  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem('netlab:accounts') ? 'in' : 'up'))
+  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem('netlab:remember') || localStorage.getItem('netlab:accounts') ? 'in' : 'up'))
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -83,10 +84,25 @@ export default function SignInPage() {
     if (busy) return
     setBusy(true)
     setError(null)
+    setNotice(null)
     submitting.current = true
     try {
+      if (mode === 'reset') {
+        await sendReset(email)
+        setNotice(f(d.auth.linkSent, { email: email.trim() }))
+        submitting.current = false
+        setBusy(false)
+        return
+      }
       if (mode === 'in') await signIn(email, password, remember)
-      else await signUp(name, email, password, remember)
+      else if ((await signUp(name, email, password, remember)) === 'confirm-email') {
+        setNotice(f(d.auth.confirmBody, { email: email.trim() }))
+        setMode('in')
+        setPassword('')
+        submitting.current = false
+        setBusy(false)
+        return
+      }
       const who = useAuth.getState().user?.name ?? ''
       setGranted(who)
       window.setTimeout(() => navigate(next, { replace: true }), reduced ? 300 : 1700)
@@ -143,7 +159,7 @@ export default function SignInPage() {
             </text>
           </svg>
           <h2 data-auth-in className="mt-4 font-display text-4xl leading-tight font-semibold tracking-tight">{d.brand.tagline}</h2>
-          <p data-auth-in className="mt-3 max-w-md text-muted">{mode === 'in' ? d.auth.subIn : d.auth.subUp}</p>
+          <p data-auth-in className="mt-3 max-w-md text-muted">{mode === 'up' ? d.auth.subUp : d.auth.subIn}</p>
         </div>
 
         {/* Card */}
@@ -155,11 +171,14 @@ export default function SignInPage() {
               <div>
                 <p className="hud-label">{d.auth.eyebrow}</p>
                 <h1 className="font-display text-2xl font-semibold tracking-tight">
-                  <DecryptText key={mode} text={mode === 'in' ? d.auth.titleIn : d.auth.titleUp} speed={22} />
+                  <DecryptText key={mode} text={mode === 'in' ? d.auth.titleIn : mode === 'up' ? d.auth.titleUp : d.auth.resetTitle} speed={22} />
                 </h1>
               </div>
             </div>
 
+            {mode === 'reset' ? (
+              <p className="mt-4 text-sm text-muted">{d.auth.resetSub}</p>
+            ) : (
             <div data-auth-in role="tablist" className="glass mt-6 grid grid-cols-2 rounded-full p-1">
               {(['in', 'up'] as Mode[]).map((m) => (
                 <button
@@ -177,6 +196,7 @@ export default function SignInPage() {
                 </button>
               ))}
             </div>
+            )}
 
             <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
               <AnimatePresence initial={false}>
@@ -193,6 +213,7 @@ export default function SignInPage() {
                 <input id="email" type="email" className={field} placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
                 <label htmlFor="email" className={floatLabel}>{d.auth.email}</label>
               </div>
+              {mode !== 'reset' && (
               <div data-auth-in className="relative">
                 <input
                   id="password"
@@ -208,6 +229,7 @@ export default function SignInPage() {
                   {show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              )}
 
               <AnimatePresence initial={false}>
                 {mode === 'up' && password.length > 0 && (
@@ -226,6 +248,8 @@ export default function SignInPage() {
                 )}
               </AnimatePresence>
 
+              {mode !== 'reset' && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
               <label data-auth-in className="flex cursor-pointer items-center gap-2.5 text-sm text-muted select-none">
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="peer sr-only" />
                 <span className="grid h-5 w-5 place-items-center rounded-md border border-line-strong transition-colors peer-checked:border-cyan peer-checked:bg-cyan peer-focus-visible:ring-2 peer-focus-visible:ring-cyan">
@@ -233,6 +257,21 @@ export default function SignInPage() {
                 </span>
                 {d.auth.remember}
               </label>
+              {mode === 'in' && (
+                <button type="button" onClick={() => { setMode('reset'); setError(null); setNotice(null) }} className="text-xs text-cyan hover:underline">
+                  {d.auth.forgot}
+                </button>
+              )}
+              </div>
+              )}
+
+              <AnimatePresence>
+                {notice && (
+                  <motion.p role="status" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+                    {notice}
+                  </motion.p>
+                )}
+              </AnimatePresence>
 
               <AnimatePresence>
                 {error && (
@@ -255,7 +294,7 @@ export default function SignInPage() {
                       <motion.span key="busy" initial={{ opacity: 0 }} animate={{ opacity: 1 }}><Loader2 size={18} className="animate-spin" /></motion.span>
                     ) : (
                       <motion.span key="label" className="flex items-center gap-2" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                        {mode === 'in' ? d.auth.submitIn : d.auth.submitUp}
+                        {mode === 'in' ? d.auth.submitIn : mode === 'up' ? d.auth.submitUp : d.auth.sendLink}
                         <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
                       </motion.span>
                     )}
@@ -264,6 +303,11 @@ export default function SignInPage() {
               </div>
             </form>
 
+            {mode === 'reset' && (
+              <button type="button" onClick={() => { setMode('in'); setError(null); setNotice(null) }} className="mt-4 text-sm text-muted hover:text-cyan">
+                ← {d.auth.backToSignIn}
+              </button>
+            )}
             <p data-auth-in className="mt-5 flex gap-2 text-[0.72rem] leading-relaxed text-dim">
               <Lock size={12} className="mt-0.5 shrink-0" /> {d.auth.deviceNote}
             </p>

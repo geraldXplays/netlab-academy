@@ -93,7 +93,7 @@ interface ProgressActions {
   finishPractice: (mode: string, correct: number, total: number) => number
 }
 
-const fresh = (): ProgressData => ({
+export const fresh = (): ProgressData => ({
   callsign: '',
   createdAt: new Date().toISOString(),
   xp: 0,

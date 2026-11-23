@@ -17,6 +17,7 @@ const DesignSystem = lazy(() => import('@/pages/DesignSystem'))
 const AcademyPage = lazy(() => import('@/pages/AcademyPage'))
 const LessonPage = lazy(() => import('@/pages/LessonPage'))
 const SignInPage = lazy(() => import('@/pages/SignInPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'))
 const AssessmentsPage = lazy(() => import('@/pages/AssessmentsPage'))
 const ExamPage = lazy(() => import('@/pages/ExamPage'))
 const PracticePage = lazy(() => import('@/pages/PracticePage'))
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <Landing /> },
       { path: '/signin', element: s(<SignInPage />) },
+      { path: '/reset', element: s(<ResetPasswordPage />) },
       { path: '/dashboard', element: p(<Dashboard />) },
       { path: '/academy', element: p(<AcademyPage />) },
       { path: '/academy/:levelId', element: p(<AcademyPage />) },

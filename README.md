@@ -50,12 +50,16 @@ src/
   pages/         Route components
 ```
 
-## Accounts
+## Accounts & cloud sync (Supabase)
 
-- Local accounts (`src/auth/local.ts`): PBKDF2-SHA256 password hashes with per-account salt, stored on the device.
-  "Keep me signed in" uses localStorage; otherwise the session ends with the tab.
-- Each account has its own progress key (`netlab:progress:<userId>`); the first account adopts any earlier anonymous progress.
-- Learner pages are behind `RequireAuth`. A cloud adapter (e.g. Supabase) can replace `local.ts` without UI changes.
+- Auth: Supabase email + password (`src/store/auth.ts`), password reset by email (`/reset`).
+  "Keep me signed in" stores the session in localStorage; otherwise in sessionStorage.
+- Data: `public.profiles` (name, avatar colour) and `public.progress` (one JSON document per learner),
+  both protected by row-level security — each user can only read/write their own row.
+- Sync (`src/store/sync.ts`): changes are pushed 1.5 s after they happen (and when the tab is hidden).
+  On sign-in the device copy, the cloud copy and any older on-device progress are **merged** (union of
+  lessons/badges, best scores kept), so using several devices never loses progress.
+- Config: `.env` holds the project URL and *publishable* key (safe for browsers; RLS enforces access).
 
 ## Assessments (Phase 3)
 
