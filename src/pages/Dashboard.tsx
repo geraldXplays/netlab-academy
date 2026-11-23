@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { ArrowRight, Compass, Flame, Gauge, Pencil, RotateCcw, Sparkles, Radar as RadarIcon, Route } from 'lucide-react'
 import { useProgress, liveStreak, nextLesson, levelProgress } from '@/store/progress'
+import { useAuth } from '@/store/auth'
 import { LEVELS, ALL_LESSON_IDS } from '@/content/curriculum'
 import { LESSONS, locateLesson } from '@/content/lessons'
 import { levelFromXp, rankForLevel } from '@/lib/xp'
@@ -70,8 +71,9 @@ export default function Dashboard() {
 
 function Header() {
   const { d, lang } = useI18n()
-  const callsign = useProgress((s) => s.callsign)
-  const setCallsign = useProgress((s) => s.setCallsign)
+  const user = useAuth((s) => s.user)
+  const rename = useAuth((s) => s.rename)
+  const callsign = user?.name ?? ''
   const xp = useProgress((s) => s.xp)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(callsign)
@@ -84,7 +86,7 @@ function Header() {
 
   const name = callsign || d.dash.operator
   const save = () => {
-    setCallsign(draft.trim())
+    if (draft.trim()) rename(draft.trim())
     setEditing(false)
   }
 

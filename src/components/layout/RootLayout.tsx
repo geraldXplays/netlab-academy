@@ -7,6 +7,7 @@ import { ScrollProgress } from './ScrollProgress'
 import { Preloader } from './Preloader'
 import { Backdrop } from '@/components/fx/Backdrop'
 import { CursorFX } from '@/components/fx/CursorFX'
+import { AchievementCelebration } from './AchievementCelebration'
 import { useLenis } from '@/providers/SmoothScroll'
 import { ScrollTrigger } from '@/lib/gsap'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
@@ -49,6 +50,7 @@ export function RootLayout() {
       <Footer />
       <Toaster />
       <CursorFX />
+      <AchievementCelebration />
     </>
   )
 }

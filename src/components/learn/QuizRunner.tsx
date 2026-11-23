@@ -16,6 +16,7 @@ type Phase = 'intro' | 'running' | 'result'
 export function QuizRunner({ lessonId, questions, passRatio }: { lessonId: string; questions: Question[]; passRatio: number }) {
   const { d, f } = useI18n()
   const submitQuiz = useProgress((s) => s.submitQuiz)
+  const recordAnswer = useProgress((s) => s.recordAnswer)
   const done = useProgress((s) => !!s.completedLessons[lessonId])
   const best = useProgress((s) => s.lessonState[lessonId]?.best ?? 0)
   const reduced = useReducedMotionPref()
@@ -73,6 +74,7 @@ export function QuizRunner({ lessonId, questions, passRatio }: { lessonId: strin
             <QuestionCard
               q={questions[i]}
               onAnswer={(ok) => {
+                recordAnswer({ ...questions[i], topic: lessonId.split('.')[0] }, ok)
                 setAnswered(ok)
                 if (ok) setScore((s) => s + 1)
               }}

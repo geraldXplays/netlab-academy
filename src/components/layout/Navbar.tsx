@@ -6,13 +6,13 @@ import { Logo } from '@/components/ui/Logo'
 import { Button } from '@/components/ui/Button'
 import { useI18n } from '@/i18n'
 import { useUI } from '@/store/ui'
-import { useProgress } from '@/store/progress'
-import { levelFromXp } from '@/lib/xp'
 import { cn } from '@/lib/cn'
 import { NAV_LINKS } from './navLinks'
 import { LangToggle } from './LangToggle'
 import { SettingsMenu } from './SettingsMenu'
 import { IdentityPickerButton } from './IdentityPicker'
+import { UserMenu } from './UserMenu'
+import { useAuth } from '@/store/auth'
 
 export function Navbar() {
   const { d } = useI18n()
@@ -24,8 +24,7 @@ export function Navbar() {
   const mobileMenu = useUI((s) => s.mobileMenu)
   const setMobileMenu = useUI((s) => s.setMobileMenu)
   const introDone = useUI((s) => s.introDone)
-  const xp = useProgress((s) => s.xp)
-  const { level } = levelFromXp(xp)
+  const user = useAuth((s) => s.user)
 
   // Hide on scroll down, reveal on scroll up.
   useMotionValueEvent(scrollY, 'change', (y) => {
@@ -58,13 +57,13 @@ export function Navbar() {
             <Logo />
           </Link>
 
-          <ul className="hidden items-center gap-1 lg:flex">
+          <ul className="hidden items-center gap-0.5 xl:flex">
             {NAV_LINKS.map(({ to, key }) => (
               <li key={to}>
                 <NavLink
                   to={to}
                   className={({ isActive }) =>
-                    cn('relative block rounded-full px-3.5 py-2 text-sm transition-colors duration-300', isActive ? 'text-text' : 'text-muted hover:text-text')
+                    cn('relative block rounded-full px-3 py-2 text-sm transition-colors duration-300', isActive ? 'text-text' : 'text-muted hover:text-text')
                   }
                 >
                   {({ isActive }) => (
@@ -92,24 +91,20 @@ export function Navbar() {
               <IdentityPickerButton />
               <SettingsMenu />
             </div>
-            {isLanding ? (
+            {isLanding && !user ? (
               <div className="hidden md:block">
                 <Button to="/dashboard" size="sm" iconRight={<ArrowRight size={15} />}>
                   {d.nav.start}
                 </Button>
               </div>
             ) : (
-              <Link
-                to="/dashboard"
-                className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 font-mono text-xs text-muted transition-colors hover:border-cyan/40 hover:text-text md:flex"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-dot" />
-                LVL {String(level).padStart(2, '0')}
-              </Link>
+              <div className="hidden sm:block">
+                <UserMenu />
+              </div>
             )}
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="grid h-10 w-10 place-items-center rounded-full text-text hover:bg-cyan-soft lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-full text-text hover:bg-cyan-soft xl:hidden"
               aria-expanded={mobileMenu}
               aria-label={mobileMenu ? d.nav.close : d.nav.menu}
             >
@@ -143,7 +138,7 @@ function MobileMenu() {
           animate={{ clipPath: 'circle(150% at calc(100% - 44px) 44px)' }}
           exit={{ clipPath: 'circle(0% at calc(100% - 44px) 44px)' }}
           transition={{ duration: 0.7, ease: [0.85, 0, 0.15, 1] }}
-          className="fixed inset-0 z-40 flex flex-col bg-bg/95 px-6 pt-28 pb-10 backdrop-blur-xl lg:hidden"
+          className="fixed inset-0 z-40 flex flex-col bg-bg/95 px-6 pt-28 pb-10 backdrop-blur-xl xl:hidden"
           data-lenis-prevent
         >
           <div className="bg-grid mask-radial pointer-events-none absolute inset-0" />
@@ -176,6 +171,7 @@ function MobileMenu() {
             <LangToggle size="md" />
             <IdentityPickerButton />
             <SettingsMenu up />
+            <div className="ml-auto"><UserMenu up /></div>
           </motion.div>
         </motion.div>
       )}

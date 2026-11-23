@@ -7,6 +7,8 @@ import { useSettings } from '@/store/settings'
 import { useReducedMotionPref } from '@/hooks/useReducedMotion'
 import { MotionConfig } from 'motion/react'
 import Landing from '@/pages/Landing'
+import { RequireAuth } from '@/components/layout/RequireAuth'
+import { useAuth } from '@/store/auth'
 
 // Secondary routes are code-split.
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
@@ -14,6 +16,11 @@ const ComingSoon = lazy(() => import('@/pages/ComingSoon'))
 const DesignSystem = lazy(() => import('@/pages/DesignSystem'))
 const AcademyPage = lazy(() => import('@/pages/AcademyPage'))
 const LessonPage = lazy(() => import('@/pages/LessonPage'))
+const SignInPage = lazy(() => import('@/pages/SignInPage'))
+const AssessmentsPage = lazy(() => import('@/pages/AssessmentsPage'))
+const ExamPage = lazy(() => import('@/pages/ExamPage'))
+const PracticePage = lazy(() => import('@/pages/PracticePage'))
+const CertificatePage = lazy(() => import('@/pages/CertificatePage'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const Loading = () => (
@@ -26,16 +33,23 @@ const Loading = () => (
 )
 
 const s = (el: React.ReactNode) => <Suspense fallback={<Loading />}>{el}</Suspense>
+/** Learner-only route: lazy + signed-in. */
+const p = (el: React.ReactNode) => s(<RequireAuth>{el}</RequireAuth>)
 
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
       { path: '/', element: <Landing /> },
-      { path: '/dashboard', element: s(<Dashboard />) },
-      { path: '/academy', element: s(<AcademyPage />) },
-      { path: '/academy/:levelId', element: s(<AcademyPage />) },
-      { path: '/learn/:lessonId', element: s(<LessonPage />) },
+      { path: '/signin', element: s(<SignInPage />) },
+      { path: '/dashboard', element: p(<Dashboard />) },
+      { path: '/academy', element: p(<AcademyPage />) },
+      { path: '/academy/:levelId', element: p(<AcademyPage />) },
+      { path: '/learn/:lessonId', element: p(<LessonPage />) },
+      { path: '/assessments', element: p(<AssessmentsPage />) },
+      { path: '/assessments/:id', element: p(<ExamPage />) },
+      { path: '/practice/:mode', element: p(<PracticePage />) },
+      { path: '/certificate/:levelId', element: p(<CertificatePage />) },
       { path: '/labs', element: s(<ComingSoon section="labs" />) },
       { path: '/simulator', element: s(<ComingSoon section="simulator" />) },
       { path: '/dictionary', element: s(<ComingSoon section="dictionary" />) },
@@ -62,6 +76,10 @@ function SettingsSync() {
 
 export default function App() {
   const reduced = useReducedMotionPref()
+  const initAuth = useAuth((st) => st.init)
+  useEffect(() => {
+    void initAuth()
+  }, [initAuth])
   return (
     <MotionConfig reducedMotion={reduced ? 'always' : 'never'}>
       <SettingsSync />

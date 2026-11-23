@@ -112,7 +112,7 @@ export function BlockView({ block, lessonId, index }: { block: Block; lessonId: 
           <QuestionCard
             compact
             q={block.question}
-            initial={past !== undefined ? { choice: past ? (block.question.kind === 'mcq' ? block.question.answer : block.question.answer ? 0 : 1) : -1, correct: past } : undefined}
+            initial={past !== undefined ? { correct: past } : undefined}
             onAnswer={(ok) => answerCheck(lessonId, index, ok)}
           />
         </section>

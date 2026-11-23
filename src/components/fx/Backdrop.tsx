@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
  */
 export function Backdrop({ className, variant = 'page' }: { className?: string; variant?: 'page' | 'hero' }) {
   return (
-    <div aria-hidden className={cn('pointer-events-none fixed inset-0 -z-10 overflow-hidden', className)}>
+    <div aria-hidden className={cn('app-backdrop pointer-events-none fixed inset-0 -z-10 overflow-hidden', className)}>
       <div className="absolute inset-0 bg-bg" />
       <div className="bg-grid mask-radial absolute inset-0 opacity-70" />
       <div className="backdrop-extra" />

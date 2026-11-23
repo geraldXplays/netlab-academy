@@ -11,7 +11,7 @@ export function Toaster() {
   return (
     <div aria-live="polite" className="pointer-events-none fixed right-3 bottom-3 z-[60] flex w-[min(380px,calc(100vw-24px))] flex-col items-end gap-2 sm:right-5 sm:bottom-5">
       <AnimatePresence initial={false}>
-        {toasts.map((t) => (
+        {toasts.filter((t) => t.type !== 'achievement').map((t) => (
           <motion.div
             key={t.id}
             layout

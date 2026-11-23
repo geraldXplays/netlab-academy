@@ -9,6 +9,7 @@ import { LEVELS, levelLessonIds } from '@/content/curriculum'
 import type { L } from '@/content/types'
 import { MODULE_SKILL } from '@/content/skills'
 import { useNotifications } from './notifications'
+import type { Question } from '@/content/lessons/types'
 
 type DayActivity = Partial<Record<ActivityKind, number>>
 
@@ -32,6 +33,30 @@ export interface ProgressData {
   lessonState: Record<string, LessonState>
   lastLesson: string | null
   bookmarks: string[]
+  /** assessmentId -> results */
+  assessments: Record<string, AssessmentResult>
+  /** curriculum module -> answers seen / correct (drives adaptive review) */
+  topicStats: Record<string, { seen: number; correct: number }>
+  /** question tag -> correct answers (e.g. 'ping' for the Ping Master badge) */
+  tagCounts: Record<string, number>
+  /** levelId -> certificate */
+  certificates: Record<string, { date: string; score: number; code: string }>
+}
+
+export interface AssessmentResult {
+  best: number
+  last: number
+  attempts: number
+  passed: boolean
+  lastAt: string
+  history: { at: string; score: number }[]
+}
+
+export interface FinishResult {
+  ratio: number
+  passed: boolean
+  firstPass: boolean
+  xp: number
 }
 
 export interface LessonState {
@@ -62,6 +87,10 @@ interface ProgressActions {
   /** Returns true when this submission completed the lesson for the first time. */
   submitQuiz: (id: string, correct: number, total: number, passRatio: number) => boolean
   toggleBookmark: (id: string) => void
+  /** Analytics for any answered question (lessons, exams, practice). */
+  recordAnswer: (q: Question & { topic?: string; tags?: string[] }, correct: boolean) => void
+  finishAssessment: (a: { id: string; levelId: string; passRatio: number; xp: number; badge?: string; certificate?: boolean; skills?: string[] }, correct: number, total: number) => FinishResult
+  finishPractice: (mode: string, correct: number, total: number) => number
 }
 
 const fresh = (): ProgressData => ({
@@ -78,6 +107,10 @@ const fresh = (): ProgressData => ({
   lessonState: {},
   lastLesson: null,
   bookmarks: [],
+  assessments: {},
+  topicStats: {},
+  tagCounts: {},
+  certificates: {},
 })
 
 export const useProgress = create<ProgressData & ProgressActions>()(
@@ -116,6 +149,7 @@ export const useProgress = create<ProgressData & ProgressActions>()(
         if (get().completedLessons[lessonId]) return
         set((s) => ({ completedLessons: { ...s.completedLessons, [lessonId]: new Date().toISOString() } }))
         get().recordActivity('lesson')
+        get().unlockAchievement('first-steps')
       },
 
       unlockAchievement: (id) => {
@@ -161,7 +195,6 @@ export const useProgress = create<ProgressData & ProgressActions>()(
         const ratio = total ? correct / total : 0
         const cur = get().lessonState[id] ?? emptyLesson()
         set((s) => ({ lessonState: { ...s.lessonState, [id]: { ...cur, best: Math.max(cur.best, ratio), attempts: cur.attempts + 1, updated: new Date().toISOString() } } }))
-        if (correct) get().recordActivity('quiz', correct)
         if (ratio < passRatio || get().completedLessons[id]) return false
         get().completeLesson(id)
         get().addXp(40 + Math.round(ratio * 20), { en: 'Lesson completed', fr: 'Leçon terminée' })
@@ -170,15 +203,87 @@ export const useProgress = create<ProgressData & ProgressActions>()(
         return true
       },
 
+      recordAnswer: (q, correct) => {
+        const topic = q.topic
+        set((s) => {
+          const out: Partial<ProgressData> = {}
+          if (topic) {
+            const cur = s.topicStats[topic] ?? { seen: 0, correct: 0 }
+            out.topicStats = { ...s.topicStats, [topic]: { seen: cur.seen + 1, correct: cur.correct + (correct ? 1 : 0) } }
+          }
+          if (correct && q.tags?.length) {
+            const tc = { ...s.tagCounts }
+            for (const t of q.tags) tc[t] = (tc[t] ?? 0) + 1
+            out.tagCounts = tc
+          }
+          return out
+        })
+        if (correct) {
+          get().recordActivity('quiz')
+          if ((get().tagCounts.ping ?? 0) >= 5) get().unlockAchievement('ping-master')
+        }
+      },
+
+      finishAssessment: (a, correct, total) => {
+        const ratio = total ? correct / total : 0
+        const passed = ratio >= a.passRatio
+        const now = new Date().toISOString()
+        const prev = get().assessments[a.id]
+        const firstPass = passed && !prev?.passed
+        set((s) => ({
+          assessments: {
+            ...s.assessments,
+            [a.id]: {
+              best: Math.max(prev?.best ?? 0, ratio),
+              last: ratio,
+              attempts: (prev?.attempts ?? 0) + 1,
+              passed: passed || !!prev?.passed,
+              lastAt: now,
+              history: [...(prev?.history ?? []).slice(-19), { at: now, score: ratio }],
+            },
+          },
+        }))
+        let xp = 0
+        if (firstPass) {
+          xp = a.xp + Math.round(ratio * 50)
+          get().addXp(xp, { en: 'Assessment passed', fr: 'Évaluation réussie' })
+          if (a.badge) get().unlockAchievement(a.badge)
+          const level = LEVELS.find((l) => l.id === a.levelId)
+          if (level) {
+            set((s) => {
+              const skills = { ...s.skills }
+              for (const k of level.skills) skills[k] = Math.min(100, (skills[k] ?? 0) + Math.round(ratio * (a.certificate ? 20 : 8)))
+              return { skills }
+            })
+          }
+          if (a.certificate) {
+            const code = `NLA-${a.levelId.slice(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`
+            set((s) => ({ certificates: { ...s.certificates, [a.levelId]: { date: now, score: ratio, code } } }))
+          }
+        } else if (passed && ratio > (prev?.best ?? 0)) {
+          xp = 25
+          get().addXp(xp, { en: 'New personal best', fr: 'Nouveau record personnel' })
+        }
+        if (ratio === 1) get().unlockAchievement('perfectionist')
+        return { ratio, passed, firstPass, xp }
+      },
+
+      finishPractice: (mode, correct, total) => {
+        const xp = Math.min(60, correct * 4)
+        if (xp) get().addXp(xp, { en: 'Practice session', fr: 'Session d’entraînement' })
+        if (mode === 'subnetting' && total >= 10 && correct / total >= 0.9) get().unlockAchievement('subnet-apprentice')
+        return xp
+      },
+
       toggleBookmark: (id) =>
         set((s) => ({ bookmarks: s.bookmarks.includes(id) ? s.bookmarks.filter((b) => b !== id) : [...s.bookmarks, id] })),
     }),
     {
       name: STORAGE_KEYS.progress,
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localAdapter),
       // v1 → v2 adds lesson state, resume pointer and bookmarks.
-      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
+      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], assessments: {}, topicStats: {}, tagCounts: {}, certificates: {}, ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
     },
   ),
 )
@@ -201,8 +306,8 @@ export const levelProgress = (s: ProgressData, levelId: string) => {
 }
 
 /** Level N+1 unlocks once level N is fully completed (assessment gating arrives in Phase 3). */
-export const isLevelUnlocked = (s: ProgressData, index: number) =>
-  index === 0 || levelProgress(s, LEVELS[index - 1].id).ratio >= 1
+/** Level N+1 unlocks only by passing Level N's certification exam. */
+export const isLevelUnlocked = (s: ProgressData, index: number) => index === 0 || !!s.assessments?.[`a-l${index}-exam`]?.passed
 
 /** First incomplete lesson along the path. */
 export function nextLesson(s: ProgressData) {
@@ -247,5 +352,39 @@ function demoProfile(): ProgressData {
     lessonState: {},
     lastLesson: null,
     bookmarks: [],
+    assessments: {},
+    topicStats: {},
+    tagCounts: {},
+    certificates: {},
   }
+}
+
+/* ------------------------- Per-account storage ------------------------- */
+
+export const ANON_PROGRESS_KEY = STORAGE_KEYS.progress
+export const progressKeyFor = (userId: string | null) => (userId ? `${STORAGE_KEYS.progress}:${userId}` : STORAGE_KEYS.progress)
+
+/**
+ * Point the progress store at a user's own saved data. If that user has no
+ * saved data yet, start them fresh (optionally adopting anonymous progress).
+ */
+export async function bindProgressToUser(userId: string | null, adoptAnonymous = false) {
+  const key = progressKeyFor(userId)
+  let existing: string | null = null
+  try {
+    existing = localStorage.getItem(key)
+    if (!existing && adoptAnonymous && userId) {
+      const anon = localStorage.getItem(ANON_PROGRESS_KEY)
+      if (anon) {
+        localStorage.setItem(key, anon)
+        localStorage.removeItem(ANON_PROGRESS_KEY)
+        existing = anon
+      }
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  useProgress.persist.setOptions({ name: key })
+  if (existing) await useProgress.persist.rehydrate()
+  else useProgress.setState({ ...fresh() })
 }

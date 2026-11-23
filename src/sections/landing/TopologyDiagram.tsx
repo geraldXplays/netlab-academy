@@ -1,4 +1,4 @@
-import { BrickWall, Cloud, Monitor, Network, Printer, Router, Server, type LucideIcon } from 'lucide-react'
+import { Device, DeviceDefs, type DeviceKind } from '@/components/devices/Device'
 
 type Kind = 'cloud' | 'router' | 'firewall' | 'switch' | 'pc' | 'server' | 'printer'
 
@@ -12,8 +12,8 @@ interface Dev {
   step: number
 }
 
-const ICON: Record<Kind, LucideIcon> = {
-  cloud: Cloud, router: Router, firewall: BrickWall, switch: Network, pc: Monitor, server: Server, printer: Printer,
+const PT_KIND: Record<Kind, DeviceKind> = {
+  cloud: 'cloud', router: 'router', firewall: 'firewall', switch: 'switch', pc: 'pc', server: 'server', printer: 'printer',
 }
 
 export const DEVICES: Dev[] = [
@@ -68,6 +68,7 @@ const PACKET_ROUTES: { from: string; to: string; delay: number; color: string }[
 export function TopologyDiagram({ animated }: { animated: boolean }) {
   return (
     <svg viewBox="0 0 600 560" className="h-full w-full overflow-visible" role="img" aria-label="Small office network: internet, edge router, firewall, core switch, two VLAN access switches with workstations, a printer and servers.">
+      <DeviceDefs />
       <defs>
         <filter id="topo-glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="4" result="b" />
@@ -121,27 +122,15 @@ export function TopologyDiagram({ animated }: { animated: boolean }) {
 
       {/* Devices */}
       {DEVICES.map((d) => {
-        const Icon = ICON[d.kind]
         const isCore = d.kind === 'router' || d.kind === 'firewall' || d.id === 'core'
         return (
           <g key={d.id} data-dev data-step={d.step} style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
-            {isCore && <rect x={d.x - H - 6} y={d.y - H - 6} width={(H + 6) * 2} height={(H + 6) * 2} rx="16" fill="none" stroke="var(--cyan)" strokeOpacity="0.25" />}
-            <rect
-              x={d.x - H}
-              y={d.y - H}
-              width={H * 2}
-              height={H * 2}
-              rx="12"
-              fill="var(--bg-2)"
-              stroke={d.kind === 'firewall' ? 'var(--danger)' : d.step === 3 && d.x > 300 ? 'var(--purple)' : 'var(--cyan)'}
-              strokeOpacity="0.8"
-              strokeWidth="1.3"
-            />
-            <Icon x={d.x - 10} y={d.y - 10} width={20} height={20} strokeWidth={1.6} className={d.kind === 'firewall' ? 'text-danger' : 'text-text'} />
-            <text x={d.x} y={d.y + H + 14} textAnchor="middle" className="fill-text font-mono text-[9px] font-medium tracking-wider">
+            {isCore && <circle cx={d.x} cy={d.y} r={H + 10} fill="var(--cyan-soft)" stroke="var(--cyan)" strokeOpacity="0.25" />}
+            <Device kind={PT_KIND[d.kind]} x={d.x} y={d.y - 2} scale={d.kind === 'cloud' ? 0.85 : 0.72} animate={false} />
+            <text x={d.x} y={d.y + H + 16} textAnchor="middle" className="fill-text font-mono text-[9px] font-medium tracking-wider">
               {d.label}
             </text>
-            <text x={d.x} y={d.y + H + 25} textAnchor="middle" className="fill-dim font-mono text-[8px]">
+            <text x={d.x} y={d.y + H + 27} textAnchor="middle" className="fill-dim font-mono text-[8px]">
               {d.ip}
             </text>
             {d.step === 3 && (

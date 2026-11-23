@@ -2,6 +2,9 @@ import type { ComponentType } from 'react'
 import type { DiagramKey } from '@/content/lessons'
 import { useI18n } from '@/i18n'
 import { Box, Label, Line, Packet, Svg } from './kit'
+import { MotherboardDiagram } from './Motherboard'
+import { Rj45Diagram } from './Rj45'
+import { HomeNetworkPT, LanWanPT, PacketJourneyPT, TopologiesPT } from './network'
 
 const useTr = () => {
   const { lang } = useI18n()
@@ -22,30 +25,6 @@ function Ipo() {
       <Line d="M335 160 V135" arrow tone="success" />
       <Packet path="M140 100 H250 M390 100 H500" dur={2.2} />
       <Label x={320} y={40} tone="text" size={13} weight={600}>{tr('Every computer, from laptop to router', 'Tout ordinateur, du portable au routeur')}</Label>
-    </Svg>
-  )
-}
-
-function Motherboard() {
-  const tr = useTr()
-  return (
-    <Svg viewBox="0 0 640 330" label={tr('Simplified motherboard layout', 'Schéma simplifié de carte mère')}>
-      <Box x={20} y={20} w={600} h={290} label="" tone="muted" rx={16} />
-      <Label x={40} y={45} anchor="start" size={11} mono>MOTHERBOARD</Label>
-      <Box x={60} y={70} w={120} h={100} label="CPU" sub="socket" tone="cyan" fill />
-      <Box x={210} y={70} w={36} h={150} label="" tone="blue" fill rx={4} />
-      <Box x={256} y={70} w={36} h={150} label="" tone="blue" fill rx={4} />
-      <Label x={251} y={240} tone="blue">RAM</Label>
-      <Box x={330} y={70} w={260} h={34} label={tr('PCIe x16 — graphics card', 'PCIe x16 — carte graphique')} tone="purple" fill rx={6} size={12} />
-      <Box x={330} y={118} w={260} h={28} label={tr('PCIe x1 — network card', 'PCIe x1 — carte réseau')} tone="purple" rx={6} size={11} />
-      <Box x={330} y={160} w={140} h={30} label="M.2 NVMe" tone="success" fill rx={6} size={12} />
-      <Box x={490} y={160} w={100} h={30} label="SATA" tone="success" rx={6} size={12} />
-      <Box x={60} y={200} w={120} h={60} label="Chipset" tone="warning" fill />
-      <Box x={330} y={220} w={150} h={50} label={tr('Power (24-pin)', 'Alimentation (24 br.)')} sub="← PSU" tone="danger" />
-      <Box x={500} y={220} w={90} h={50} label="I/O" sub="USB · RJ45" tone="muted" />
-      <Line d="M180 120 H205" tone="blue" />
-      <Line d="M120 170 V195" tone="warning" />
-      <Line d="M180 230 H325" tone="warning" dashed />
     </Svg>
   )
 }
@@ -170,98 +149,6 @@ function CommandAnatomy() {
   )
 }
 
-function LanWan() {
-  const tr = useTr()
-  return (
-    <Svg viewBox="0 0 660 260" label={tr('Two LANs joined by a WAN', 'Deux LAN reliés par un WAN')}>
-      <Box x={10} y={20} w={220} h={220} label="" tone="cyan" rx={18} />
-      <Label x={120} y={42} tone="cyan" weight={700}>LAN · Paris</Label>
-      <Box x={70} y={60} w={100} h={36} label="Router" tone="cyan" fill size={12} />
-      <Box x={70} y={120} w={100} h={34} label="Switch" tone="blue" size={12} />
-      <Box x={20} y={185} w={60} h={34} label="PC" tone="muted" size={11} />
-      <Box x={90} y={185} w={60} h={34} label="PC" tone="muted" size={11} />
-      <Box x={160} y={185} w={60} h={34} label="Srv" tone="muted" size={11} />
-      <Line d="M120 96 V120 M120 154 V170 H50 V185 M120 170 V185 M120 170 H190 V185" />
-
-      <Box x={430} y={20} w={220} h={220} label="" tone="purple" rx={18} />
-      <Label x={540} y={42} tone="purple" weight={700}>LAN · Lyon</Label>
-      <Box x={490} y={60} w={100} h={36} label="Router" tone="purple" fill size={12} />
-      <Box x={490} y={120} w={100} h={34} label="Switch" tone="blue" size={12} />
-      <Box x={445} y={185} w={60} h={34} label="PC" tone="muted" size={11} />
-      <Box x={515} y={185} w={60} h={34} label="PC" tone="muted" size={11} />
-      <Box x={585} y={185} w={55} h={34} label="AP" tone="muted" size={11} />
-      <Line d="M540 96 V120 M540 154 V170 H475 V185 M540 170 V185 M540 170 H612 V185" tone="purple" />
-
-      <Box x={270} y={60} w={120} h={46} label="Internet" sub="WAN" tone="warning" fill />
-      <Line d="M170 78 H270" dashed tone="warning" />
-      <Line d="M390 78 H490" dashed tone="warning" />
-      <Packet path="M170 78 H490" dur={3} tone="warning" />
-    </Svg>
-  )
-}
-
-function Topologies() {
-  const tr = useTr()
-  const node = (x: number, y: number, k: string) => <Box key={k} x={x - 10} y={y - 10} w={20} h={20} label="" tone="cyan" fill rx={10} />
-  return (
-    <Svg viewBox="0 0 680 220" label={tr('Star, bus, ring and mesh topologies', 'Topologies étoile, bus, anneau et maillée')}>
-      {/* star */}
-      <Line d="M85 100 L35 55 M85 100 L135 55 M85 100 L35 145 M85 100 L135 145" />
-      <Box x={70} y={86} w={30} h={28} label="SW" tone="blue" fill rx={6} size={10} />
-      {[[35, 55], [135, 55], [35, 145], [135, 145]].map(([x, y], i) => node(x, y, `s${i}`))}
-      <Label x={85} y={200} tone="text" weight={600}>{tr('Star', 'Étoile')}</Label>
-      {/* bus */}
-      <Line d="M190 100 H330" width={3} />
-      {[205, 245, 285, 320].map((x, i) => (
-        <g key={i}>
-          <Line d={`M${x} 100 V${i % 2 ? 140 : 60}`} />
-          {node(x, i % 2 ? 150 : 50, `b${i}`)}
-        </g>
-      ))}
-      <Label x={260} y={200} tone="text" weight={600}>Bus</Label>
-      {/* ring */}
-      <Line d="M435 45 L485 75 L485 125 L435 155 L385 125 L385 75 Z" />
-      {[[435, 45], [485, 75], [485, 125], [435, 155], [385, 125], [385, 75]].map(([x, y], i) => node(x, y, `r${i}`))}
-      <Label x={435} y={200} tone="text" weight={600}>{tr('Ring', 'Anneau')}</Label>
-      {/* mesh */}
-      <Line d="M560 50 L650 50 L650 150 L560 150 Z M560 50 L650 150 M650 50 L560 150" />
-      {[[560, 50], [650, 50], [650, 150], [560, 150]].map(([x, y], i) => node(x, y, `m${i}`))}
-      <Label x={605} y={200} tone="text" weight={600}>{tr('Mesh', 'Maillée')}</Label>
-    </Svg>
-  )
-}
-
-function Rj45Pinout() {
-  const tr = useTr()
-  const b = [
-    ['#ffffff', '#f97316'], ['#f97316', '#f97316'], ['#ffffff', '#22c55e'], ['#3b82f6', '#3b82f6'],
-    ['#ffffff', '#3b82f6'], ['#22c55e', '#22c55e'], ['#ffffff', '#92400e'], ['#92400e', '#92400e'],
-  ]
-  const names = [tr('white-orange', 'blanc-orange'), 'orange', tr('white-green', 'blanc-vert'), tr('blue', 'bleu'), tr('white-blue', 'blanc-bleu'), tr('green', 'vert'), tr('white-brown', 'blanc-marron'), tr('brown', 'marron')]
-  return (
-    <Svg viewBox="0 0 640 300" label={tr('RJ45 T568B pinout', 'Brochage RJ45 T568B')}>
-      <Box x={170} y={20} w={300} h={150} label="" tone="muted" rx={14} />
-      <Label x={320} y={190} tone="text" weight={700}>T568B</Label>
-      {b.map(([base, stripe], i) => {
-        const x = 195 + i * 32
-        return (
-          <g key={i}>
-            <rect x={x} y={40} width={18} height={110} rx={3} fill={base} stroke="var(--line-strong)" />
-            {base !== stripe && <rect x={x + 6} y={40} width={6} height={110} fill={stripe} />}
-            <Label x={x + 9} y={165} size={11} mono tone="text">{i + 1}</Label>
-          </g>
-        )
-      })}
-      {names.map((n, i) => (
-        <Label key={n} x={i < 4 ? 20 : 620} y={220 + (i % 4) * 19} anchor={i < 4 ? 'start' : 'end'} size={11}>
-          {`${i + 1} · ${n}`}
-        </Label>
-      ))}
-      <Label x={320} y={290} size={10}>{tr('T568A swaps the orange and green pairs', 'T568A inverse les paires orange et verte')}</Label>
-    </Svg>
-  )
-}
-
 function Ipv4Anatomy() {
   const tr = useTr()
   const octets = ['192', '168', '1', '25']
@@ -306,75 +193,19 @@ function MacAnatomy() {
   )
 }
 
-function HomeNetwork() {
-  const tr = useTr()
-  return (
-    <Svg viewBox="0 0 680 280" label={tr('Small office network devices', 'Équipements d’un petit réseau')}>
-      <Box x={10} y={110} w={90} h={50} label={tr('ISP', 'FAI')} sub={tr('Internet', 'Internet')} tone="warning" fill />
-      <Box x={130} y={110} w={90} h={50} label="Modem" sub="ONT" tone="muted" />
-      <Box x={250} y={110} w={100} h={50} label={tr('Router', 'Routeur')} sub="NAT · DHCP" tone="cyan" fill />
-      <Box x={380} y={110} w={100} h={50} label={tr('Firewall', 'Pare-feu')} sub={tr('rules', 'règles')} tone="danger" />
-      <Box x={510} y={110} w={100} h={50} label={tr('Switch', 'Commutateur')} sub="MAC" tone="blue" fill />
-      <Box x={470} y={220} w={60} h={40} label="PC" tone="muted" size={12} />
-      <Box x={540} y={220} w={60} h={40} label="PC" tone="muted" size={12} />
-      <Box x={610} y={220} w={60} h={40} label={tr('Printer', 'Impr.')} tone="muted" size={11} />
-      <Box x={530} y={20} w={110} h={44} label={tr('Access point', 'Borne Wi-Fi')} sub="802.11" tone="purple" />
-      <Line d="M100 135 H130 M220 135 H250 M350 135 H380 M480 135 H510" />
-      <Line d="M560 160 V190 H500 V220 M560 190 H570 V220 M560 190 H640 V220" tone="blue" />
-      <Line d="M585 110 V64" tone="purple" />
-      <Packet path="M100 135 H560 V220" dur={3.2} />
-      <Label x={300} y={95} size={10} tone="cyan">{tr('default gateway', 'passerelle par défaut')}</Label>
-      <Box x={120} y={190} w={330} h={70} label="" tone="muted" rx={12} />
-      <Label x={285} y={215} size={11} tone="text" weight={600}>{tr('Home "box" = modem + router + firewall', 'Box = modem + routeur + pare-feu')}</Label>
-      <Label x={285} y={240} size={11} tone="text" weight={600}>{tr('+ switch + Wi-Fi in one case', '+ commutateur + Wi-Fi en un boîtier')}</Label>
-    </Svg>
-  )
-}
-
-function PacketJourney() {
-  const tr = useTr()
-  const steps = [
-    { l: 'DHCP', s: tr('get IP', 'obtenir IP'), tone: 'success' as const },
-    { l: 'DNS', s: tr('name → IP', 'nom → IP'), tone: 'warning' as const },
-    { l: 'ARP', s: tr('gateway MAC', 'MAC passerelle'), tone: 'blue' as const },
-    { l: 'Switch', s: tr('forward frame', 'relaie la trame'), tone: 'blue' as const },
-    { l: 'Router', s: 'NAT', tone: 'cyan' as const },
-    { l: 'Internet', s: tr('hops', 'sauts'), tone: 'purple' as const },
-    { l: tr('Web server', 'Serveur web'), s: tr('reply', 'réponse'), tone: 'success' as const },
-  ]
-  return (
-    <Svg viewBox="0 0 700 190" label={tr('Journey of a web request', 'Parcours d’une requête web')}>
-      <Box x={6} y={66} w={62} h={50} label="PC" sub="192.168.1.10" tone="muted" size={13} />
-      {steps.map((s, i) => (
-        <g key={s.l}>
-          <Box x={84 + i * 88} y={66} w={78} h={50} label={s.l} sub={s.s} tone={s.tone} fill size={12} />
-          <Label x={123 + i * 88} y={50} size={11} mono tone={s.tone}>{i + 1}</Label>
-        </g>
-      ))}
-      <Line d="M68 91 H84" arrow />
-      {steps.slice(1).map((_, i) => (
-        <Line key={i} d={`M${162 + i * 88} 91 H${172 + i * 88}`} arrow />
-      ))}
-      <Line d="M650 128 C 560 175, 150 175, 37 120" tone="success" dashed arrow />
-      <Label x={350} y={182} size={10} tone="success">{tr('response returns the same way', 'la réponse revient par le même chemin')}</Label>
-      <Packet path="M37 91 H690" dur={4.5} />
-    </Svg>
-  )
-}
-
 export const DIAGRAMS: Record<DiagramKey, ComponentType> = {
   ipo: Ipo,
-  motherboard: Motherboard,
+  motherboard: MotherboardDiagram,
   'memory-hierarchy': MemoryHierarchy,
   'os-layers': OsLayers,
   'boot-sequence': BootSequence,
   'fs-tree': FsTree,
   'command-anatomy': CommandAnatomy,
-  'lan-wan': LanWan,
-  topologies: Topologies,
-  'rj45-pinout': Rj45Pinout,
+  'lan-wan': LanWanPT,
+  topologies: TopologiesPT,
+  'rj45-pinout': Rj45Diagram,
   'ipv4-anatomy': Ipv4Anatomy,
   'mac-anatomy': MacAnatomy,
-  'home-network': HomeNetwork,
-  'packet-journey': PacketJourney,
+  'home-network': HomeNetworkPT,
+  'packet-journey': PacketJourneyPT,
 }

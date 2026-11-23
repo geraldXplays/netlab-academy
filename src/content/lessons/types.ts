@@ -34,8 +34,26 @@ export type Block =
   | { type: 'check'; question: Question }
 
 export type Question =
-  | { kind: 'mcq'; prompt: L; options: (L | string)[]; answer: number; explain: L | string }
-  | { kind: 'tf'; prompt: L; answer: boolean; explain: L | string }
+  | { kind: 'mcq'; prompt: L; options: (L | string)[]; answer: number; explain: L | string; code?: string }
+  | { kind: 'tf'; prompt: L; answer: boolean; explain: L | string; code?: string }
+  /** Type a command. Accepted answers are compared after normalising case and spacing. */
+  | { kind: 'command'; prompt: L; accept: string[]; explain: L | string; code?: string; shell?: string }
+  /** Type a short value (number, address…). */
+  | { kind: 'input'; prompt: L; accept: string[]; explain: L | string; code?: string; placeholder?: string }
+  /** Put the items in the right order (items are listed in the correct order). */
+  | { kind: 'order'; prompt: L; items: (L | string)[]; explain: L | string }
+  /** Fill several fields, e.g. an IP configuration. */
+  | { kind: 'fields'; prompt: L; fields: { label: L | string; accept: string[]; placeholder?: string }[]; explain: L | string; code?: string }
+
+/** Assessment metadata layered on a question. */
+export type ExamQuestion = Question & {
+  id: string
+  /** curriculum module id, used for topic analytics and adaptive review */
+  topic: string
+  /** 1 = recall, 2 = apply, 3 = analyse/troubleshoot */
+  difficulty: 1 | 2 | 3
+  tags?: string[]
+}
 
 export interface Term {
   term: L | string

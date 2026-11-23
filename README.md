@@ -4,14 +4,14 @@
 
 An immersive networking and IT-infrastructure training platform, from absolute beginner to professional infrastructure engineer.
 
-## Status: Phase 2 (learning platform)
+## Status: Phase 3 (assessments)
 
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Design system, landing page, navigation, motion system, dashboard | ✅ Done |
 | 2 | Learning paths, modules, lessons, progress tracking | ✅ Level 1 complete (20 lessons, EN/FR) |
-| 3 | Quizzes, exams, XP and achievements, skill progression | Next |
-| 4 | Practical labs | — |
+| 3 | Quizzes, exams, XP and achievements, skill progression | ✅ Done |
+| 4 | Practical labs (incl. a Packet-Tracer-style web simulator) | Next |
 | 5 | IT Operations Simulator | — |
 | 6 | AI tutor, technical dictionary, interactive topology explorer | — |
 
@@ -49,6 +49,21 @@ src/
   sections/      Landing-page sections
   pages/         Route components
 ```
+
+## Accounts
+
+- Local accounts (`src/auth/local.ts`): PBKDF2-SHA256 password hashes with per-account salt, stored on the device.
+  "Keep me signed in" uses localStorage; otherwise the session ends with the tab.
+- Each account has its own progress key (`netlab:progress:<userId>`); the first account adopts any earlier anonymous progress.
+- Learner pages are behind `RequireAuth`. A cloud adapter (e.g. Supabase) can replace `local.ts` without UI changes.
+
+## Assessments (Phase 3)
+
+- Question kinds: multiple choice, true/false, typed commands, typed values, put-in-order, multi-field configuration; any can show terminal output.
+- `src/content/assess/`: grader, adaptive picker (difficulty follows performance, weak topics come back), procedural IPv4/subnetting generators, hand-written command / troubleshooting / ordering / configuration banks.
+- `src/content/assessments.ts`: checkpoints, practicals and the Level 1 certification exam (80 %, 45 min). Passing it issues a printable certificate and unlocks Level 2.
+- Practice arena: addressing drills, subnetting sprint, command recall, weak-spot review.
+- Badges are awarded only from results (lesson quizzes, assessments, practice, correct troubleshooting answers).
 
 ## Learning content
 

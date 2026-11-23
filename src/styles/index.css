@@ -258,3 +258,13 @@ html[data-motion='reduced'] *::after {
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ------------------------------ Print ------------------------------ */
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  header, footer, canvas, .no-print, .app-backdrop, .cursor-ring, .cursor-dot, [aria-live] { display: none !important; }
+  html, body { background: var(--bg) !important; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  main > div { padding: 0 !important; max-width: none !important; }
+  .certificate { border-radius: 0 !important; height: 100vh; aspect-ratio: auto !important; box-shadow: none !important; transform: none !important; }
+}
