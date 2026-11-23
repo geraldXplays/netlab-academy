@@ -47,6 +47,7 @@ export interface IosResult {
 function ifStatus(t: Topology, d: SimDevice, name: string) {
   const i = iface(d, name)!
   if (!i.up) return ['administratively down', 'down']
+  if (i.err) return ['down (err-disabled)', 'down']
   const l = linkAt(t, { dev: d.id, iface: name })
   if (!l || !linkUp(t, l)) return ['down', 'down']
   return ['up', 'up']
@@ -133,13 +134,14 @@ function showVlanBrief(d: SimDevice) {
 }
 
 function showIpRoute(d: SimDevice) {
-  const out = ['Codes: L - local, C - connected, S - static, R - RIP, O - OSPF', '', 'Gateway of last resort is not set', '']
+  const def = (d.routes ?? []).find((r) => r.net === '0.0.0.0' && r.mask === '0.0.0.0')
+  const out = ['Codes: L - local, C - connected, S - static, R - RIP, O - OSPF', '       * - candidate default', '', def ? `Gateway of last resort is ${def.via} to network 0.0.0.0` : 'Gateway of last resort is not set', '']
   for (const i of d.ifaces) {
     if (!i.ip || !i.mask || !i.up) continue
     out.push(`C    ${networkOf(i.ip, i.mask)}/${prefixOf(i.mask)} is directly connected, ${longIface(i.name)}`)
     out.push(`L    ${i.ip}/32 is directly connected, ${longIface(i.name)}`)
   }
-  for (const r of d.routes ?? []) out.push(`S    ${r.net}/${prefixOf(r.mask)} [1/0] via ${r.via}`)
+  for (const r of d.routes ?? []) out.push(`${r === def ? 'S*' : 'S '}   ${r.net}/${prefixOf(r.mask)} [1/0] via ${r.via}`)
   return [...out, '']
 }
 
@@ -290,7 +292,7 @@ export function runIos(topo: Topology, devId: string, state: IosState, raw: stri
 
   if (is(tok[0], 'shutdown')) {
     for (const name of s.targets) {
-      t = updateDevice(t, devId, (d) => ({ ...d, ifaces: d.ifaces.map((i) => (i.name === name ? { ...i, up: neg } : i)) }))
+      t = updateDevice(t, devId, (d) => ({ ...d, ifaces: d.ifaces.map((i) => (i.name === name ? { ...i, up: neg, err: neg ? false : i.err } : i)) }))
       out.push(...linkMessages(t, dev(t, devId)!, name, neg))
     }
     return { topo: t, state: s, out }

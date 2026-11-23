@@ -48,7 +48,7 @@ export function RootLayout() {
         </motion.main>
       </AnimatePresence>
       {/* Lab workspaces are full-screen apps: no footer under the simulator. */}
-      {!/^\/labs\/.+/.test(location.pathname) && <Footer />}
+      {!/^\/(labs|simulator)\/.+/.test(location.pathname) && <Footer />}
       <Toaster />
       <CursorFX />
       <AchievementCelebration />

@@ -25,6 +25,7 @@ const PracticePage = lazy(() => import('@/pages/PracticePage'))
 const CertificatePage = lazy(() => import('@/pages/CertificatePage'))
 const LabsPage = lazy(() => import('@/pages/LabsPage'))
 const LabPage = lazy(() => import('@/pages/LabPage'))
+const OpsPage = lazy(() => import('@/pages/OpsPage'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const Loading = () => (
@@ -58,7 +59,8 @@ const router = createBrowserRouter([
       { path: '/certificate/:levelId', element: p(<CertificatePage />) },
       { path: '/labs', element: p(<LabsPage />) },
       { path: '/labs/:id', element: p(<LabPage />) },
-      { path: '/simulator', element: s(<ComingSoon section="simulator" />) },
+      { path: '/simulator', element: p(<OpsPage />) },
+      { path: '/simulator/:id', element: p(<OpsPage />) },
       { path: '/dictionary', element: s(<ComingSoon section="dictionary" />) },
       { path: '/design-system', element: s(<DesignSystem />) },
       { path: '*', element: s(<NotFound />) },

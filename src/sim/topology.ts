@@ -105,7 +105,7 @@ export function linkUp(t: Topology, l: SimLink) {
   const db = dev(t, l.b.dev)
   const ia = da && iface(da, l.a.iface)
   const ib = db && iface(db, l.b.iface)
-  return !!(ia?.up && ib?.up)
+  return !!(ia?.up && ib?.up && !ia.err && !ib.err)
 }
 
 export function connect(t: Topology, a: Endpoint, b: Endpoint, cable: SimLink['cable'] = 'straight'): Topology {

@@ -17,6 +17,8 @@ export interface Iface {
   vlan?: number
   mode?: 'access' | 'trunk'
   description?: string
+  /** Port shut by a protection feature (port-security violation). Cleared by shutdown / no shutdown. */
+  err?: boolean
 }
 
 export interface Route {

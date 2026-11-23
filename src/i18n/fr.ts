@@ -81,7 +81,7 @@ export const fr: Dict = {
   },
   footer: {
     rights: "Conçu pour les futurs ingénieurs d'infrastructure.",
-    phase: 'Phase 4 · Labs et simulateur',
+    phase: 'Phase 5 · Simulateur d’exploitation IT',
   },
   ranks: {
     trainee: 'Stagiaire',

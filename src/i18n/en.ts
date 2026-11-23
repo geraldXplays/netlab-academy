@@ -79,7 +79,7 @@ export const en = {
   },
   footer: {
     rights: 'Built for future infrastructure engineers.',
-    phase: 'Phase 4 · Labs & simulator',
+    phase: 'Phase 5 · IT Operations Simulator',
   },
   ranks: {
     trainee: 'Trainee',

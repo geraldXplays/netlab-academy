@@ -44,6 +44,18 @@ export interface ProgressData {
   certificates: Record<string, { date: string; score: number; code: string }>
   /** labId -> saved work, so a lab resumes exactly where it was left */
   labs: Record<string, LabState>
+  /** incidentId -> best result in the IT Operations Simulator */
+  incidents: Record<string, IncidentResult>
+}
+
+export interface IncidentResult {
+  best: number
+  grade: string
+  attempts: number
+  /** first time it was resolved */
+  resolvedAt?: string
+  bestSeconds?: number
+  lastAt: string
 }
 
 export interface LabState {
@@ -110,6 +122,8 @@ interface ProgressActions {
   finishPractice: (mode: string, correct: number, total: number) => number
   saveLab: (id: string, patch: Partial<LabState>) => void
   completeLab: (lab: { id: string; xp: number; badge?: string; noHintBadge?: string; skills: string[] }, ratio: number) => { first: boolean; xp: number }
+  /** Record a closed incident. Returns XP earned (first resolution full XP, later improvements the difference). */
+  finishIncident: (inc: { id: string; xp: number; skills: string[] }, r: { total: number; grade: string; resolved: boolean; seconds: number }) => { xp: number; first: boolean; improved: boolean }
 }
 
 export const fresh = (): ProgressData => ({
@@ -131,6 +145,7 @@ export const fresh = (): ProgressData => ({
   tagCounts: {},
   certificates: {},
   labs: {},
+  incidents: {},
 })
 
 export const useProgress = create<ProgressData & ProgressActions>()(
@@ -316,6 +331,37 @@ export const useProgress = create<ProgressData & ProgressActions>()(
         return { first: true, xp: lab.xp }
       },
 
+      finishIncident: (inc, r) => {
+        const now = new Date().toISOString()
+        const cur = get().incidents[inc.id]
+        const prevBest = cur?.resolvedAt ? cur.best : 0
+        const first = r.resolved && !cur?.resolvedAt
+        const improved = r.resolved && r.total > prevBest
+        const next: IncidentResult = {
+          best: r.resolved ? Math.max(prevBest, r.total) : cur?.best ?? 0,
+          grade: improved || !cur ? r.grade : cur.grade,
+          attempts: (cur?.attempts ?? 0) + 1,
+          resolvedAt: cur?.resolvedAt ?? (r.resolved ? now : undefined),
+          bestSeconds: r.resolved ? Math.min(cur?.bestSeconds ?? Infinity, r.seconds) : cur?.bestSeconds,
+          lastAt: now,
+        }
+        set((s) => ({ incidents: { ...s.incidents, [inc.id]: next } }))
+        if (!r.resolved) return { xp: 0, first: false, improved: false }
+        const xp = Math.round((inc.xp * (r.total - prevBest)) / 100)
+        if (first) get().recordActivity('incident')
+        if (xp > 0) get().addXp(xp, { en: 'Incident resolved', fr: 'Incident résolu' })
+        if (first) {
+          set((s) => {
+            const skills = { ...s.skills }
+            for (const k of inc.skills) skills[k] = Math.min(100, (skills[k] ?? 0) + Math.round(r.total / 10))
+            return { skills }
+          })
+        }
+        const strong = Object.values(get().incidents).filter((x) => x.resolvedAt && (x.grade === 'A' || x.grade === 'S')).length
+        if (strong >= 5) get().unlockAchievement('troubleshooter')
+        return { xp: Math.max(0, xp), first, improved }
+      },
+
       toggleBookmark: (id) =>
         set((s) => ({ bookmarks: s.bookmarks.includes(id) ? s.bookmarks.filter((b) => b !== id) : [...s.bookmarks, id] })),
     }),
@@ -324,7 +370,7 @@ export const useProgress = create<ProgressData & ProgressActions>()(
       version: 4,
       storage: createJSONStorage(() => localAdapter),
       // v1 → v2 adds lesson state, resume pointer and bookmarks.
-      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], assessments: {}, topicStats: {}, tagCounts: {}, certificates: {}, labs: {}, ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
+      migrate: (persisted) => ({ lessonState: {}, lastLesson: null, bookmarks: [], assessments: {}, topicStats: {}, tagCounts: {}, certificates: {}, labs: {}, incidents: {}, ...(persisted as object) }) as unknown as ProgressData & ProgressActions,
     },
   ),
 )
@@ -398,6 +444,7 @@ function demoProfile(): ProgressData {
     tagCounts: {},
     certificates: {},
     labs: {},
+    incidents: {},
   }
 }
 
