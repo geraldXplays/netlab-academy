@@ -87,7 +87,8 @@ export const hardwareLessons: Lesson[] = [
       t('Apply basic safety rules before opening a computer', 'Appliquer les règles de sécurité avant d’ouvrir un ordinateur'),
     ],
     blocks: [
-      { type: 'diagram', diagram: 'motherboard', caption: t('A simplified motherboard: everything plugs into it, and it connects everything together.', 'Une carte mère simplifiée : tout s’y branche, et elle relie tout ensemble.') },
+      { type: 'diagram', diagram: 'motherboard', caption: t('A modern ATX motherboard. Click any numbered part to see what it does and how it fails.', 'Une carte mère ATX moderne. Cliquez sur un élément numéroté pour voir son rôle et ses pannes.') },
+      { type: 'diagram', diagram: 'cpu-3d', caption: t('The processor up close: drag it, flip it to see the pads that touch the socket pins, or explode it into its layers.', 'Le processeur de près : faites-le tourner, retournez-le pour voir les pastilles qui touchent les broches du socket, ou éclatez-le en couches.') },
       {
         type: 'text',
         title: t('The motherboard is the backbone', 'La carte mère est la colonne vertébrale'),
